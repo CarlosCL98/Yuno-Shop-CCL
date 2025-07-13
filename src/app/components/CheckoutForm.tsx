@@ -118,7 +118,6 @@ export default function CheckoutForm() {
 
       const checkout = await response.json();
       localStorage.setItem("yuno_checkout_session", checkout.checkout_session);
-      console.log("Sesion!!!!!!!!!!!!!!:", checkout.checkout_session);
       console.log("Yuno answer checkout:", checkout);
     } catch (error) {
       console.error("Error sending data:", error);
@@ -141,10 +140,10 @@ export default function CheckoutForm() {
        * isCreditCardProcessingOnly: true | false | undefined
       */
       card: {
-        isCreditCardProcessingOnly: false,
+        isCreditCardProcessingOnly: true,
         type: "extends",
         styles: '',
-        cardSaveEnable: false,
+        cardSaveEnable: true,
         texts: {}
       },
       onLoading: (args) => {
@@ -188,6 +187,7 @@ export default function CheckoutForm() {
 
           const payment = await paymentResponse.json();
           console.log("Yuno answer payment:", payment);
+          
           yunoInstance.continuePayment({ showPaymentStatus: true })
         } catch (error) {
           console.error("Error sending data:", error);
@@ -215,7 +215,10 @@ export default function CheckoutForm() {
         }
       },
     });
-    yunoInstance?.mountCheckout();
+    yunoInstance?.mountCheckout({
+      paymentMethodType: "CARD",
+      vaultedToken: "VAULTED_TOKEN"
+    });
   };
 
   const handleStartPayment = (e: any) => {
@@ -403,12 +406,12 @@ export default function CheckoutForm() {
 
       {/* Payment Methods */}
       <section>
-        <h2 className="text-xl font-semibold mb-2">Payment Methods</h2>
-        <div className="flex flex-col gap-10">
-          <div id="yuno-checkout"></div>
-          <div id="form-element"></div>
-          <div id="action-form-element"></div>
-          <button id="button-pay" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700" onClick={handleStartPayment}>Pay now</button>
+        <h2 className="text-xl font-semibold mb-3">Payment Methods</h2>
+        <div className="grid grid-flow-row justify-items-center">
+          <div id="yuno-checkout" className="w-100"></div>
+          <div id="form-element" className="w-100"></div>
+          <div id="action-form-element" className="w-100"></div>
+          <button id="button-pay" className="bg-blue-600 text-white px-10 py-2 rounded hover:bg-blue-700 mt-3" onClick={handleStartPayment}>Pay now</button>
         </div>
       </section>
     </form>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
+import { PaymentProvider } from "./context/PaymentContext";
 import Navbar from "./components/Navbar";
 
 const geistSans = Geist({
@@ -20,12 +21,17 @@ export const metadata: Metadata = {
 };
 
 function Providers({ children }: { children: React.ReactNode }) {
-  return <CartProvider>{children}</CartProvider>;
+  return <CartProvider><PaymentProvider>{children}</PaymentProvider></CartProvider>;
 }
 
 export default function RootLayout({ children, }: { children: React.ReactNode; }) {
   return (
     <html lang="en" suppress-hydration-warning="true" data-lt-installed="true">
+      <head>
+        { /*Improve performance with preconnect --> */}
+        <link rel="preconnect" href="https://sdk-web.y.uno" />
+        <link rel="preconnect" href="https://api.y.uno" />
+        <link rel="preconnect" href="https://sdk-web-card.prod.y.uno" /></head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <Navbar></Navbar>

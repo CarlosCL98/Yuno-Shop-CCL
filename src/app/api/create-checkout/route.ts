@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
+import {generateUniqueId} from "../../lib/utils";
 
 export async function POST(request: Request) {
   try {
     const params = await request.json();
 
+    const merchant_order_id = generateUniqueId("shopccl_sessioncheckouttest");
+
     const body = {
       "account_id": process.env.ACCOUNT_CODE!,
-      "merchant_order_id": "shopccl_sessiontest_001",
+      "merchant_order_id": merchant_order_id,
       "payment_description": "Test Yuno Shop CCL",
       "callback_url": "https://webhook.site/50c46d41-8ac5-4bfe-acdd-0e69a21f0707",
       "country": params.country,

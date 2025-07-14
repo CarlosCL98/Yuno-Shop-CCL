@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "prisma": "prisma"
+    "lint": "next lint"
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",
+    "@supabase/supabase-js": "^2.50.5",
     "@yuno-payments/sdk-web": "^1.2.1",
     "@yuno-payments/sdk-web-types": "^3.5.1",
     "date-fns": "^4.1.0",
@@ -26,7 +26,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "prisma": "^6.11.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

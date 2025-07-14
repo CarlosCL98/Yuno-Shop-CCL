@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../lib/prisma";
+//import { prisma } from "../../lib/prisma";
+import { supabase } from "../../lib/supabase";
 
 export async function POST(req: NextRequest) {
 
@@ -18,8 +19,9 @@ export async function POST(req: NextRequest) {
 
     console.log("Webhook recibido:", body);
 
-    await prisma.paymentAttempt.create({
-        data: {
+    const { error } = await supabase
+        .from("PaymentAttempt")
+        .insert({
             paymentId: body.payment.id,
             status: body.payment.status,
             sub_status: body.payment.sub_status,
@@ -27,8 +29,8 @@ export async function POST(req: NextRequest) {
             currency: body.payment.amount.currency,
             createdAt: body.payment.created_at,
             rawResponse: body
-        },
-    });
+        });
 
-    return NextResponse.json({ received: true }, { status: 200 });
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
 }

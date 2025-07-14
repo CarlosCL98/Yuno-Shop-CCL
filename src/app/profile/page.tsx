@@ -1,11 +1,14 @@
-import { prisma } from "../lib/prisma";
+//import { prisma } from "../lib/prisma";
+import { supabase } from "../lib/supabase";
 
 export default async function ProfilePage() {
-    const payments = await prisma.paymentAttempt.findMany({
-        orderBy: {
-            createdAt: "desc",
-        },
-    });
+
+    const { data: payments, error } = await supabase
+    .from("PaymentAttempt")
+    .select("*")
+    .order("createdAt", { ascending: false });
+
+    if (error) throw new Error(error.message);
 
     return (
         <div className="p-6 max-w-6xl mx-auto">

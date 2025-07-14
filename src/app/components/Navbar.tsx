@@ -5,19 +5,30 @@ import { useCart } from "../context/CartContext";
 
 export default function Navbar() {
     const { cartItems } = useCart();
-
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
-        <nav className="bg-white shadow p-4 flex justify-between items-center">
-            <Link href="/products" className="text-xl font-bold text-gray-800">
-                🛍️ Yuno CCL Shop
+        <nav className="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+            {/* Brand */}
+            <Link href="/products" className="text-2xl font-bold text-blue-600 hover:text-blue-800 transition">
+                🛍️ Yuno Shop CCL
             </Link>
-            <Link href="/cart" className="relative text-gray-700 hover:text-blue-600">
-                <span className="ml-2 mr-6">🛒 View my cart</span>{itemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">{itemCount}</span>
-                )}
-            </Link>
+
+            {/* Links */}
+            <div className="flex gap-6 items-center text-gray-700 font-medium">
+                <Link href="/profile" className="hover:text-blue-600 transition">
+                    👤 Profile
+                </Link>
+
+                <Link href="/cart" className="relative hover:text-blue-600 transition">
+                    🛒 Cart
+                    {itemCount > 0 && (
+                        <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 shadow">
+                            {itemCount}
+                        </span>
+                    )}
+                </Link>
+            </div>
         </nav>
     );
 }

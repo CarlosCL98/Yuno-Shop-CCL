@@ -2,14 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
-//import { usePayment } from "../context/PaymentContext";
+import { usePayments } from "../context/PaymentContext";
 import { loadScript } from '@yuno-payments/sdk-web';
 import { Yuno, YunoInstance } from '@yuno-payments/sdk-web-types';
+import { useRouter } from "next/navigation";
+import InputField from "./InputField";
 
 export default function CheckoutForm() {
   const { cartItems, total } = useCart();
-  //const { customerId, checkoutSessionId, setCustomerId, setCheckoutSessionId } = usePayment();
   const [yunoInstance, setYunoInstance] = useState<YunoInstance | null>(null);
+  const { addPayment } = usePayments();
+  const [showPaymentSection, setShowPaymentSection] = useState(false);
+  const router = useRouter();
 
   const [formData, setFormData] = useState({
     merchant_customer_id: "shopccl_customertest_001",
@@ -93,6 +97,7 @@ export default function CheckoutForm() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    setShowPaymentSection(true);
     try {
       // Create the customer
       const customerResponse = await fetch("/api/create-customer", {
@@ -161,6 +166,9 @@ export default function CheckoutForm() {
        */
       yunoPaymentResult: (status) => {
         console.log('Payment result:', status);
+        if (status === "SUCCEEDED") {
+          router.push("/profile");
+        }
       },
       /**
        * Executes when there are errors
@@ -176,7 +184,7 @@ export default function CheckoutForm() {
         * It uses the following endpoint https://docs.y.uno/reference/create-payment
         */
         try {
-          // Create the customer
+          // Create the payment
           const customerId = localStorage.getItem("yuno_customer_id");
           const checkoutSessionId = localStorage.getItem("yuno_checkout_session");
           const paymentResponse = await fetch("/api/create-payment", {
@@ -187,7 +195,14 @@ export default function CheckoutForm() {
 
           const payment = await paymentResponse.json();
           console.log("Yuno answer payment:", payment);
-          
+          const paymentData = {
+            payment_id: payment.id,
+            status: payment.sub_status,
+            amount: payment.amount.value,
+            currency: payment.amount.currency || "COP",
+            created_at: payment.created_at,
+          };
+          addPayment(paymentData);
           yunoInstance.continuePayment({ showPaymentStatus: true })
         } catch (error) {
           console.error("Error sending data:", error);
@@ -242,178 +257,97 @@ export default function CheckoutForm() {
 
 
   return (
-    <form className="space-y-8">
-
+    <form className="space-y-10 max-w-4xl mx-auto px-4 py-6 bg-white rounded-xl shadow-md">
       {/* Cart Summary */}
       <section>
-        <h2 className="text-xl font-semibold mb-2">Purchase Summary</h2>
-        {cartItems.map((item) => (
-          <div key={item.id} className="flex justify-between">
-            <p>{item.name} x {item.quantity}</p>
-            <p>${(item.price * item.quantity).toLocaleString()}</p>
-          </div>
-        ))}
-        <hr className="my-2" />
-        <p className="font-bold text-lg">Total: ${total.toLocaleString()}</p>
+        <h2 className="text-2xl font-bold mb-4">🧾 Purchase Summary</h2>
+        <div className="space-y-2">
+          {cartItems.map((item) => (
+            <div key={item.id} className="flex justify-between text-gray-700">
+              <span>{item.name} × {item.quantity}</span>
+              <span>${(item.price * item.quantity).toLocaleString()}</span>
+            </div>
+          ))}
+          <hr className="my-3 border-gray-300" />
+          <p className="text-right text-lg font-semibold text-gray-900">
+            Total: ${total.toLocaleString()}
+          </p>
+        </div>
       </section>
 
-      {/* Payer data */}
+      {/* Payer Information */}
       <section>
-        <h2 className="text-xl font-semibold mb-2">Payer Information</h2>
+        <h2 className="text-2xl font-bold mb-4">👤 Payer Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="text"
-            name="first_name"
-            placeholder="Name"
-            value={formData.first_name}
-            onChange={handleChange}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            type="text"
-            name="last_name"
-            placeholder="Lastname"
-            value={formData.last_name}
-            onChange={handleChange}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            type="text"
-            name="document_type"
-            placeholder="Document Type (CC, CE, PP)"
-            value={formData.document.document_type}
-            onChange={(e) => handleNestedChange(e, "document")}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            type="text"
-            name="document_number"
-            placeholder="Document Number"
-            value={formData.document.document_number}
-            onChange={(e) => handleNestedChange(e, "document")}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            type="tel"
-            name="number"
-            placeholder="Phone"
-            value={formData.phone.number}
-            onChange={(e) => handleNestedChange(e, "phone")}
-            className="border p-2 rounded"
-            required
-          />
+          <InputField name="first_name" placeholder="First Name" value={formData.first_name} onChange={handleChange} />
+          <InputField name="last_name" placeholder="Last Name" value={formData.last_name} onChange={handleChange} />
+          <InputField name="document_type" placeholder="Document Type (CC, CE, PP)" value={formData.document.document_type} onChange={(e) => handleNestedChange(e, "document")} />
+          <InputField name="document_number" placeholder="Document Number" value={formData.document.document_number} onChange={(e) => handleNestedChange(e, "document")} />
+          <InputField name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} />
+          <InputField name="number" type="tel" placeholder="Phone Number" value={formData.phone.number} onChange={(e) => handleNestedChange(e, "phone")} />
         </div>
       </section>
 
       {/* Shipping Address */}
       <section>
-        <h2 className="text-xl font-semibold mb-2">Shipping Address</h2>
+        <h2 className="text-2xl font-bold mb-4">📦 Shipping Address</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="text"
-            name="address_line_1"
-            placeholder="Address"
-            value={formData.shipping_address.address_line_1}
-            onChange={(e) => handleNestedChange(e, "shipping_address")}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            type="text"
-            name="city"
-            placeholder="City"
-            value={formData.shipping_address.city}
-            onChange={(e) => handleNestedChange(e, "shipping_address")}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            type="text"
-            name="country"
-            placeholder="Country"
-            value={formData.shipping_address.country}
-            onChange={(e) => handleNestedChange(e, "shipping_address")}
-            className="border p-2 rounded"
-            required
-          />
+          <InputField name="address_line_1" placeholder="Address" value={formData.shipping_address.address_line_1} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+          <InputField name="city" placeholder="City" value={formData.shipping_address.city} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+          <InputField name="country" placeholder="Country" value={formData.shipping_address.country} onChange={(e) => handleNestedChange(e, "shipping_address")} />
         </div>
       </section>
 
       {/* Billing Address */}
       <section>
-        <h2 className="text-xl font-semibold mb-2">Billing Address</h2>
-        <label className="flex items-center gap-2 mb-2">
+        <h2 className="text-2xl font-bold mb-4">🧾 Billing Address</h2>
+        <label className="flex items-center gap-2 mb-4 text-gray-700">
           <input
             type="checkbox"
             checked={sameAsShipping}
             onChange={(e) => {
               setSameAsShipping(e.target.checked);
-              if (e.target.checked) handleCopyAddress();
-              else handleDeleteAddress();
+              e.target.checked ? handleCopyAddress() : handleDeleteAddress();
             }}
           />
-          Use the same shipping address
+          Use the same as shipping address
         </label>
 
         {!sameAsShipping && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              name="address_line_1"
-              placeholder="Address"
-              value={formData.billing_address.address_line_1}
-              onChange={(e) => handleNestedChange(e, "billing_address")}
-              className="border p-2 rounded"
-              required
-            />
-            <input
-              type="text"
-              name="city"
-              placeholder="City"
-              value={formData.billing_address.city}
-              onChange={(e) => handleNestedChange(e, "billing_address")}
-              className="border p-2 rounded"
-              required
-            />
-            <input
-              type="text"
-              name="country"
-              placeholder="Country"
-              value={formData.billing_address.country}
-              onChange={(e) => handleNestedChange(e, "billing_address")}
-              className="border p-2 rounded"
-              required
-            />
+            <InputField name="address_line_1" placeholder="Address" value={formData.billing_address.address_line_1} onChange={(e) => handleNestedChange(e, "billing_address")} />
+            <InputField name="city" placeholder="City" value={formData.billing_address.city} onChange={(e) => handleNestedChange(e, "billing_address")} />
+            <InputField name="country" placeholder="Country" value={formData.billing_address.country} onChange={(e) => handleNestedChange(e, "billing_address")} />
           </div>
         )}
-        <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mt-3" onClick={handleSubmit}>
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full mt-4 transition"
+        >
           Confirm Information
         </button>
       </section>
 
       {/* Payment Methods */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">Payment Methods</h2>
-        <div className="grid grid-flow-row justify-items-center">
-          <div id="yuno-checkout" className="w-100"></div>
-          <div id="form-element" className="w-100"></div>
-          <div id="action-form-element" className="w-100"></div>
-          <button id="button-pay" className="bg-blue-600 text-white px-10 py-2 rounded hover:bg-blue-700 mt-3" onClick={handleStartPayment}>Pay now</button>
+      <section className={`${showPaymentSection ? "block" : "hidden"}`}>
+        <h2 className="text-2xl font-bold mb-4">💳 Payment Method</h2>
+        <div className="space-y-4">
+          <div id="yuno-checkout" className="w-full" />
+          <div id="form-element" className="w-full" />
+          <div id="action-form-element" className="w-full" />
+          <button
+            id="button-pay"
+            type="button"
+            className="bg-green-600 hover:bg-green-700 text-white px-10 py-2 rounded-full mt-2 transition"
+            onClick={handleStartPayment}
+          >
+            Pay Now
+          </button>
         </div>
       </section>
     </form>
   );
+
 }

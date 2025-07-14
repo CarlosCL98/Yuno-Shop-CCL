@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
 import { PaymentProvider } from "./context/PaymentContext";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,16 +23,18 @@ function Providers({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout({ children, }: { children: React.ReactNode; }) {
   return (
-    <html lang="en" suppress-hydration-warning="true" data-lt-installed="true">
+    <html lang="en" className={`${inter.variable}`}>
       <head>
         { /*Improve performance with preconnect --> */}
         <link rel="preconnect" href="https://sdk-web.y.uno" />
         <link rel="preconnect" href="https://api.y.uno" />
-        <link rel="preconnect" href="https://sdk-web-card.prod.y.uno" /></head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <link rel="preconnect" href="https://sdk-web-card.prod.y.uno" />
+      </head>
+      <body className="font-sans bg-gray-50 text-gray-900">
         <Providers>
           <Navbar></Navbar>
           {children}
+          <Footer></Footer>
         </Providers>
       </body>
     </html>

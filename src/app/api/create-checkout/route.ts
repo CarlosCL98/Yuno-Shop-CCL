@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       "account_id": process.env.ACCOUNT_CODE!,
       "merchant_order_id": merchant_order_id,
       "payment_description": "Test Yuno Shop CCL",
-      "callback_url": "https://webhook.site/50c46d41-8ac5-4bfe-acdd-0e69a21f0707",
+      "callback_url": "",
       "country": params.country,
       "customer_id": params.customer_id,
       "amount": {

@@ -203,7 +203,13 @@ export default function CheckoutForm() {
             created_at: payment.created_at,
           };
           addPayment(paymentData);
-          yunoInstance.continuePayment({ showPaymentStatus: true })
+          const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: true });
+          console.log(responseAction);
+          if (responseAction?.action === "REDIRECT_URL") {
+            window.location.href = responseAction.action;
+          } else {
+            console.log("No redirect needed or unexpected format:", responseAction);
+          }
         } catch (error) {
           console.error("Error sending data:", error);
         }

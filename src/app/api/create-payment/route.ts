@@ -28,6 +28,7 @@ export async function POST(request: Request) {
                 "token": params.oneTimeToken
             }
         }
+        console.log(body);
         const response = await fetch("https://api-sandbox.y.uno/v1/payments", {
             method: "POST",
             headers: {
@@ -38,9 +39,9 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify(body),
         });
-
+        
         const data = await response.json();
-
+        console.log(data);
         return NextResponse.json(data);
     } catch (error) {
         console.error("Error creating Yuno Payment:", error);

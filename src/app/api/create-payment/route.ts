@@ -26,7 +26,13 @@ export async function POST(request: Request) {
             },
             "payment_method": {
                 "token": params.oneTimeToken
-            }
+            },
+            "metadata": [
+                {
+                    "key": "with3DS",
+                    "value": "no"
+                }
+            ]
         }
         console.log(body);
         const response = await fetch("https://api-sandbox.y.uno/v1/payments", {
@@ -39,7 +45,7 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify(body),
         });
-        
+
         const data = await response.json();
         console.log(data);
         return NextResponse.json(data);

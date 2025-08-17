@@ -31,6 +31,9 @@ export default function ProfileTable() {
 
             if (!error && data) {
                 setPayments(data);
+                console.log("Payments fetched:", data);
+            } else {
+                console.error("Error fetching payments:", error);
             }
         };
 

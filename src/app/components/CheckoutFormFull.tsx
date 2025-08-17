@@ -7,8 +7,10 @@ import { loadScript } from '@yuno-payments/sdk-web';
 import { Yuno, YunoInstance } from '@yuno-payments/sdk-web-types';
 import { useRouter } from "next/navigation";
 import InputField from "./InputField";
+import SelectField from "./SelectField";
+import { countries } from "../data/countries";
 
-export default function CheckoutForm() {
+export default function CheckoutFormFull() {
   const { cartItems, total } = useCart();
   const [yunoInstance, setYunoInstance] = useState<YunoInstance | null>(null);
   const { addPayment } = usePayments();
@@ -17,19 +19,19 @@ export default function CheckoutForm() {
 
   const [formData, setFormData] = useState({
     merchant_customer_id: "shopccl_customertest_001",
-    first_name: "",
-    last_name: "",
-    email: "",
-    country: "CO",
+    first_name: "Carlos",
+    last_name: "Medina",
+    email: "carlos.medina@yuno.com",
+    country: "",
     gender: "M",
     date_of_birth: "2000-12-14",
     nationality: "CO",
     document: {
-      document_type: "",
-      document_number: "",
+      document_type: "CC",
+      document_number: "1234567891",
     },
     phone: {
-      number: "",
+      number: "3112221111",
       country_code: "57",
     },
     billing_address: {
@@ -41,11 +43,11 @@ export default function CheckoutForm() {
       zip_code: "11111",
     },
     shipping_address: {
-      address_line_1: "",
+      address_line_1: "Cra 1 No 1 1",
       address_line_2: "",
       country: "",
       state: "Cundinamarca",
-      city: "",
+      city: "Bogotá",
       zip_code: "11111",
     },
   });
@@ -82,7 +84,7 @@ export default function CheckoutForm() {
   };
 
   const handleNestedChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     section: "document" | "phone" | "billing_address" | "shipping_address"
   ) => {
     const { name, value } = e.target;
@@ -92,6 +94,8 @@ export default function CheckoutForm() {
         ...prev[section],
         [name]: value,
       },
+      // Auto-sync the main country field when shipping address country changes
+      ...(section === "shipping_address" && name === "country" && { country: value }),
     }));
   };
 
@@ -131,11 +135,11 @@ export default function CheckoutForm() {
     // Init the checkout
     yunoInstance?.startCheckout({
       checkoutSession: localStorage.getItem("yuno_checkout_session") ?? "",
+      elementSelector: "#yuno-checkout",
       /**
        * The complete list of country codes is available on https://docs.y.uno/docs/country-coverage-yuno-sdk
       */
-      elementSelector: "#yuno-checkout",
-      countryCode: "CO",
+      countryCode: formData.country,
       language: 'en',
       showLoading: true,
       issuersFormEnable: true,
@@ -157,8 +161,8 @@ export default function CheckoutForm() {
       /**
        * Notifies when a payment method is selected
        */
-      yunoPaymentMethodSelected: () => {
-        console.log('Payment method selected');
+      yunoPaymentMethodSelected: (e) => {
+        console.log('Payment method selected', e);
       },
       /**
        * Returns the payment result after continuePayment
@@ -287,9 +291,19 @@ export default function CheckoutForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField name="first_name" placeholder="First Name" value={formData.first_name} onChange={handleChange} />
           <InputField name="last_name" placeholder="Last Name" value={formData.last_name} onChange={handleChange} />
+          <SelectField 
+            name="country" 
+            placeholder="Select Country" 
+            value={formData.country} 
+            onChange={handleChange}
+            options={countries.map(country => ({ 
+              value: country.isoCode, 
+              label: country.name 
+            }))}
+          />
+          <InputField name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} />
           <InputField name="document_type" placeholder="Document Type (CC, CE, PP)" value={formData.document.document_type} onChange={(e) => handleNestedChange(e, "document")} />
           <InputField name="document_number" placeholder="Document Number" value={formData.document.document_number} onChange={(e) => handleNestedChange(e, "document")} />
-          <InputField name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} />
           <InputField name="number" type="tel" placeholder="Phone Number" value={formData.phone.number} onChange={(e) => handleNestedChange(e, "phone")} />
         </div>
       </section>
@@ -300,7 +314,16 @@ export default function CheckoutForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField name="address_line_1" placeholder="Address" value={formData.shipping_address.address_line_1} onChange={(e) => handleNestedChange(e, "shipping_address")} />
           <InputField name="city" placeholder="City" value={formData.shipping_address.city} onChange={(e) => handleNestedChange(e, "shipping_address")} />
-          <InputField name="country" placeholder="Country" value={formData.shipping_address.country} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+          <SelectField 
+            name="country" 
+            placeholder="Select Country" 
+            value={formData.shipping_address.country} 
+            onChange={(e) => handleNestedChange(e, "shipping_address")}
+            options={countries.map(country => ({ 
+              value: country.isoCode, 
+              label: country.name 
+            }))}
+          />
         </div>
       </section>
 
@@ -323,7 +346,16 @@ export default function CheckoutForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField name="address_line_1" placeholder="Address" value={formData.billing_address.address_line_1} onChange={(e) => handleNestedChange(e, "billing_address")} />
             <InputField name="city" placeholder="City" value={formData.billing_address.city} onChange={(e) => handleNestedChange(e, "billing_address")} />
-            <InputField name="country" placeholder="Country" value={formData.billing_address.country} onChange={(e) => handleNestedChange(e, "billing_address")} />
+            <SelectField 
+              name="country" 
+              placeholder="Select Country" 
+              value={formData.billing_address.country} 
+              onChange={(e) => handleNestedChange(e, "billing_address")}
+              options={countries.map(country => ({ 
+                value: country.isoCode, 
+                label: country.name 
+              }))}
+            />
           </div>
         )}
 

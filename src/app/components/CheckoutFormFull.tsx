@@ -207,12 +207,16 @@ export default function CheckoutFormFull() {
             created_at: payment.created_at,
           };
           addPayment(paymentData);
-          const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: true });
-          console.log(responseAction);
-          if (responseAction?.action === "REDIRECT_URL") {
-            window.location.href = responseAction.action;
+          if (payment.checkout.sdk_action_required) {
+            const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: true });
+            console.log("Response action:", responseAction);
+            if (responseAction?.action === "REDIRECT_URL") {
+              window.location.href = responseAction.action;
+            } else {
+              console.log("No redirect needed or unexpected format:", responseAction);
+            }
           } else {
-            console.log("No redirect needed or unexpected format:", responseAction);
+            console.log("No action needed.");
           }
         } catch (error) {
           console.error("Error sending data:", error);
@@ -241,8 +245,7 @@ export default function CheckoutFormFull() {
       },
     });
     yunoInstance?.mountCheckout({
-      paymentMethodType: "CARD",
-      vaultedToken: "VAULTED_TOKEN"
+      paymentMethodType: "CARD"
     });
   };
 
@@ -265,6 +268,26 @@ export default function CheckoutFormFull() {
     initializeYuno();
   }, []);
 
+  // Handle Yuno Checkout Edit button to prevent page refresh
+  useEffect(() => {
+    const handleButtonClick = (event: Event) => {
+      const target = event.target as HTMLElement;
+      const editButton = target.closest('[data-testid="edit-payment-method-button"]');
+      
+      if (editButton) {
+        // Stop the event from bubbling and prevent default form submission
+        event.preventDefault();
+        console.log('Edit button clicked - prevented page refresh');
+      }
+    };
+
+    // Listen for clicks on the document
+    document.addEventListener('click', handleButtonClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleButtonClick, true);
+    };
+  }, [yunoInstance]);
 
   return (
     <form className="space-y-10 max-w-4xl mx-auto px-4 py-6 bg-white rounded-xl shadow-md">

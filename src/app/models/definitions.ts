@@ -34,3 +34,15 @@ export interface PaymentMethod {
     };
     preferred: boolean;
 }
+
+export interface PaymentMethodEnrollable {
+    name: string;
+    description: string;
+    type: string;
+    category: string;
+    icon: string;
+    enrollment: {
+        session: string;
+        sdk_required_action: boolean;
+    };
+}

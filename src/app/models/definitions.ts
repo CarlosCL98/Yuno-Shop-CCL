@@ -13,6 +13,18 @@ export interface CartItem extends Product {
 export interface Country {
     isoCode: string;
     name: string;
+    currency: string;
+    currencySymbol: string;
+    phoneCountryCode: string;
+    documentTypes: string[];
+    defaultDocumentType: string;
+    sampleDocumentNumber: string;
+    defaultAddress: {
+        state: string;
+        city: string;
+        zipCode: string;
+        sampleAddress: string;
+    };
 }
 
 export interface PaymentMethod {

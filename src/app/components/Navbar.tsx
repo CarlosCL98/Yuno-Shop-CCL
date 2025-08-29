@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
+import CurrencySelector from "./CurrencySelector";
 
 export default function Navbar() {
     const { cartItems } = useCart();
@@ -13,6 +14,11 @@ export default function Navbar() {
             <Link href="/products" className="text-2xl font-bold text-blue-600 hover:text-blue-800 transition">
                 🛍️ Yuno Shop CCL
             </Link>
+
+            {/* Currency Selector */}
+            <div className="hidden md:block">
+                <CurrencySelector />
+            </div>
 
             {/* Links */}
             <div className="flex gap-6 items-center text-gray-700 font-medium">

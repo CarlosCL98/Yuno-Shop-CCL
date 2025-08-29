@@ -11,9 +11,9 @@ export async function POST(request: Request) {
             "account_id": process.env.ACCOUNT_CODE!,
             "merchant_order_id": merchant_order_id,
             "description": "Test Yuno Shop CCL",
-            "country": "CO",
+            "country": params.country || "PE",
             "amount": {
-                "currency": "COP",
+                "currency": params.currency || "COP",
                 "value": params.total
             },
             "checkout": {
@@ -27,12 +27,16 @@ export async function POST(request: Request) {
             "payment_method": {
                 "token": params.oneTimeToken
             },
-            "metadata": [
+            /*"metadata": [
                 {
                     "key": "with3DS",
                     "value": "no"
+                },
+                {
+                    "key": "processor",
+                    "value": "REDEBAN"
                 }
-            ]
+            ]*/
         }
         console.log(body);
         const response = await fetch("https://api-sandbox.y.uno/v1/payments", {

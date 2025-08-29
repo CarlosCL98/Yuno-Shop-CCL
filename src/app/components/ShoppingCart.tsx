@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function ShoppingCart() {
     const { cartItems, total, removeFromCart } = useCart();
+    const { formatPrice } = useCurrency();
 
     if (cartItems.length === 0)
         return (
@@ -30,7 +32,7 @@ export default function ShoppingCart() {
                             <h2 className="text-lg font-semibold">{item.name}</h2>
                             <p className="text-gray-600">Quantity: {item.quantity}</p>
                             <p className="text-gray-700 font-medium">
-                                Subtotal: ${(item.price * item.quantity).toLocaleString()}
+                                Subtotal: {formatPrice(item.price * item.quantity)}
                             </p>
                         </div>
                         <button
@@ -44,7 +46,7 @@ export default function ShoppingCart() {
             </div>
 
             <div className="mt-8 border-t pt-4">
-                <h3 className="text-xl font-bold text-right">Total: ${total.toLocaleString()}</h3>
+                <h3 className="text-xl font-bold text-right">Total: {formatPrice(total)}</h3>
                 <div className="flex justify-end mt-4">
                     <Link href="/checkout">
                         <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full transition font-medium">

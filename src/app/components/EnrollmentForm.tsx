@@ -5,42 +5,40 @@ import { loadScript } from '@yuno-payments/sdk-web';
 import { Yuno, YunoInstance } from '@yuno-payments/sdk-web-types';
 import InputField from "./InputField";
 import SelectField from "./SelectField";
-import { countries } from "../data/countries";
+import { countries, getCountryData, getPhoneCountryCode, getDefaultDocumentType, getSampleDocumentNumber, getDocumentTypes } from "../data/countries";
 import { PaymentMethodEnrollable } from "../models/definitions";
+import { useCurrency } from "../context/CurrencyContext";
+import { useCustomer } from "../context/CustomerContext";
 
 export default function EnrollmentForm() {
     const [yunoInstance, setYunoInstance] = useState<YunoInstance | null>(null);
+    const { setCountry, country: currencyCountry } = useCurrency();
+    const { customerData, updateCustomerField, updateNestedField, updateCountryData } = useCustomer();
     const [showPaymentMethods, setShowPaymentMethods] = useState(false);
     const [paymentMethods, setPaymentMethods] = useState<PaymentMethodEnrollable[]>([]);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodEnrollable | null>(null);
     const [showEnrollmentSection, setShowEnrollmentSection] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const [formData, setFormData] = useState({
-        merchant_customer_id: "shopccl_customertest_001",
-        first_name: "Carlos",
-        last_name: "Medina",
-        email: "carlos.medina@yuno.com",
-        country: "",
-        gender: "M",
-        date_of_birth: "2000-12-14",
-        nationality: "CO",
-        document: {
-            document_type: "CC",
-            document_number: "1234567891",
-        },
-        phone: {
-            number: "3112221111",
-            country_code: "57",
-        },
-    });
+
+
+    // Sync customer data when currency context country changes (e.g., from navbar)
+    useEffect(() => {
+        if (currencyCountry && currencyCountry !== customerData.country) {
+            updateCountryData(currencyCountry);
+        }
+    }, [currencyCountry, customerData.country, updateCountryData]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        
+        // Update currency and all country-related data when country changes
+        if (name === "country") {
+            setCountry(value);
+            updateCountryData(value);
+        } else {
+            updateCustomerField(name as keyof typeof customerData, value);
+        }
     };
 
     const handleNestedChange = (
@@ -48,13 +46,7 @@ export default function EnrollmentForm() {
         section: "document" | "phone"
     ) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [section]: {
-                ...prev[section],
-                [name]: value,
-            },
-        }));
+        updateNestedField(section, name, value);
     };
 
     const handleSubmit = async (e: any) => {
@@ -66,7 +58,7 @@ export default function EnrollmentForm() {
             const customerResponse = await fetch("/api/create-customer", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(customerData),
             });
 
             const customer = await customerResponse.json();
@@ -142,7 +134,7 @@ export default function EnrollmentForm() {
                 body: JSON.stringify({
                     customer_session: localStorage.getItem("yuno_customer_session"),
                     payment_method_type: currentPaymentMethod.type,
-                    country: formData.country
+                    country: customerData.country
                 }),
             });
 
@@ -158,7 +150,7 @@ export default function EnrollmentForm() {
             yunoInstance?.mountEnrollmentLite({
                 customerSession: localStorage.getItem("yuno_customer_session") ?? "",
                 language: 'en',
-                countryCode: formData.country,
+                countryCode: customerData.country,
                 showLoading: true,
                 renderMode: {
                     type: 'element',
@@ -230,19 +222,19 @@ export default function EnrollmentForm() {
                             <InputField
                                 name="first_name"
                                 placeholder="First Name"
-                                value={formData.first_name}
+                                value={customerData.first_name}
                                 onChange={handleChange}
                             />
                             <InputField
                                 name="last_name"
                                 placeholder="Last Name"
-                                value={formData.last_name}
+                                value={customerData.last_name}
                                 onChange={handleChange}
                             />
                             <SelectField
                                 name="country"
                                 placeholder="Select Country"
-                                value={formData.country}
+                                value={customerData.country}
                                 onChange={handleChange}
                                 options={countries.map(country => ({
                                     value: country.isoCode,
@@ -253,26 +245,30 @@ export default function EnrollmentForm() {
                                 name="email"
                                 type="email"
                                 placeholder="Email"
-                                value={formData.email}
+                                value={customerData.email}
                                 onChange={handleChange}
                             />
-                            <InputField
+                            <SelectField
                                 name="document_type"
-                                placeholder="Document Type (CC, CE, PP)"
-                                value={formData.document.document_type}
+                                placeholder="Document Type"
+                                value={customerData.document.document_type}
                                 onChange={(e) => handleNestedChange(e, "document")}
+                                options={getDocumentTypes(customerData.country).map(docType => ({
+                                    value: docType,
+                                    label: docType
+                                }))}
                             />
                             <InputField
                                 name="document_number"
                                 placeholder="Document Number"
-                                value={formData.document.document_number}
+                                value={customerData.document.document_number}
                                 onChange={(e) => handleNestedChange(e, "document")}
                             />
                             <InputField
                                 name="number"
                                 type="tel"
                                 placeholder="Phone Number"
-                                value={formData.phone.number}
+                                value={customerData.phone.number}
                                 onChange={(e) => handleNestedChange(e, "phone")}
                             />
                         </div>

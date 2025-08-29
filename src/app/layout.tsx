@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
 import { PaymentProvider } from "./context/PaymentContext";
+import { CurrencyProvider } from "./context/CurrencyContext";
+import { CustomerProvider } from "./context/CustomerContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -18,7 +20,17 @@ export const metadata: Metadata = {
 };
 
 function Providers({ children }: { children: React.ReactNode }) {
-  return <CartProvider><PaymentProvider>{children}</PaymentProvider></CartProvider>;
+  return (
+    <CurrencyProvider>
+      <CustomerProvider>
+        <CartProvider>
+          <PaymentProvider>
+            {children}
+          </PaymentProvider>
+        </CartProvider>
+      </CustomerProvider>
+    </CurrencyProvider>
+  );
 }
 
 export default function RootLayout({ children, }: { children: React.ReactNode; }) {

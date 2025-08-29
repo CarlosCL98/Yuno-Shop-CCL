@@ -1,11 +1,173 @@
 import { Country } from "../models/definitions";
 
 export const countries: Country[] = [
-  { isoCode: 'CO', name: "Colombia" },
-  { isoCode: 'PE', name: "Perú" },
-  { isoCode: 'AR', name: "Argentina" },
-  { isoCode: 'PA', name: "Panamá" },
-  { isoCode: 'BR', name: "Brasil" },
-  { isoCode: 'MX', name: "México" },
-  { isoCode: 'CL', name: "Chile" }
+  { 
+    isoCode: 'CO', 
+    name: "Colombia", 
+    currency: "COP", 
+    currencySymbol: "$",
+    phoneCountryCode: "57",
+    documentTypes: ["CC", "CE", "PP"],
+    defaultDocumentType: "CC",
+    sampleDocumentNumber: "1234567890",
+    defaultAddress: {
+      state: "Cundinamarca",
+      city: "Bogotá",
+      zipCode: "11001",
+      sampleAddress: "Cra 15 No 93-50"
+    }
+  },
+  { 
+    isoCode: 'PE', 
+    name: "Perú", 
+    currency: "PEN", 
+    currencySymbol: "S/.",
+    phoneCountryCode: "51",
+    documentTypes: ["DNI", "CE", "PP"],
+    defaultDocumentType: "DNI",
+    sampleDocumentNumber: "12345678",
+    defaultAddress: {
+      state: "Lima",
+      city: "Lima",
+      zipCode: "15001",
+      sampleAddress: "Av. Javier Prado Este 123"
+    }
+  },
+  { 
+    isoCode: 'AR', 
+    name: "Argentina", 
+    currency: "ARS", 
+    currencySymbol: "$",
+    phoneCountryCode: "54",
+    documentTypes: ["DNI", "LE", "LC", "PP"],
+    defaultDocumentType: "DNI",
+    sampleDocumentNumber: "12345678",
+    defaultAddress: {
+      state: "Buenos Aires",
+      city: "Buenos Aires",
+      zipCode: "C1001",
+      sampleAddress: "Av. Corrientes 1234"
+    }
+  },
+  { 
+    isoCode: 'PA', 
+    name: "Panamá", 
+    currency: "USD", 
+    currencySymbol: "$",
+    phoneCountryCode: "507",
+    documentTypes: ["CIP", "CE", "PP"],
+    defaultDocumentType: "CIP",
+    sampleDocumentNumber: "1-234-567",
+    defaultAddress: {
+      state: "Panamá",
+      city: "Ciudad de Panamá",
+      zipCode: "00000",
+      sampleAddress: "Calle 50, Edificio Plaza"
+    }
+  },
+  { 
+    isoCode: 'BR', 
+    name: "Brasil", 
+    currency: "BRL", 
+    currencySymbol: "R$",
+    phoneCountryCode: "55",
+    documentTypes: ["CPF", "RG", "PP"],
+    defaultDocumentType: "CPF",
+    sampleDocumentNumber: "123.456.789-01",
+    defaultAddress: {
+      state: "São Paulo",
+      city: "São Paulo",
+      zipCode: "01310-100",
+      sampleAddress: "Av. Paulista, 1000"
+    }
+  },
+  { 
+    isoCode: 'MX', 
+    name: "México", 
+    currency: "MXN", 
+    currencySymbol: "$",
+    phoneCountryCode: "52",
+    documentTypes: ["CURP", "IFE", "PP"],
+    defaultDocumentType: "CURP",
+    sampleDocumentNumber: "ABCD123456HDFGHI01",
+    defaultAddress: {
+      state: "Ciudad de México",
+      city: "Ciudad de México",
+      zipCode: "06600",
+      sampleAddress: "Av. Reforma 123"
+    }
+  },
+  { 
+    isoCode: 'CL', 
+    name: "Chile", 
+    currency: "CLP", 
+    currencySymbol: "$",
+    phoneCountryCode: "56",
+    documentTypes: ["RUN", "PP"],
+    defaultDocumentType: "RUN",
+    sampleDocumentNumber: "12.345.678-9",
+    defaultAddress: {
+      state: "Región Metropolitana",
+      city: "Santiago",
+      zipCode: "7500000",
+      sampleAddress: "Av. Providencia 1234"
+    }
+  }
 ];
+
+// Utility function to get currency by country code
+export const getCurrencyByCountry = (countryCode: string): string => {
+  const country = countries.find(c => c.isoCode === countryCode);
+  return country?.currency || "USD";
+};
+
+// Utility function to get currency symbol by country code
+export const getCurrencySymbolByCountry = (countryCode: string): string => {
+  const country = countries.find(c => c.isoCode === countryCode);
+  return country?.currencySymbol || "$";
+};
+
+// Utility function to get country by currency
+export const getCountryByCurrency = (currency: string): Country | undefined => {
+  return countries.find(c => c.currency === currency);
+};
+
+// Utility function to get full country data by country code
+export const getCountryData = (countryCode: string): Country | undefined => {
+  return countries.find(c => c.isoCode === countryCode);
+};
+
+// Utility function to get phone country code
+export const getPhoneCountryCode = (countryCode: string): string => {
+  const country = countries.find(c => c.isoCode === countryCode);
+  return country?.phoneCountryCode || "1";
+};
+
+// Utility function to get document types for a country
+export const getDocumentTypes = (countryCode: string): string[] => {
+  const country = countries.find(c => c.isoCode === countryCode);
+  return country?.documentTypes || ["CC", "CE", "PP"];
+};
+
+// Utility function to get default document type
+export const getDefaultDocumentType = (countryCode: string): string => {
+  const country = countries.find(c => c.isoCode === countryCode);
+  return country?.defaultDocumentType || "CC";
+};
+
+// Utility function to get sample document number
+export const getSampleDocumentNumber = (countryCode: string): string => {
+  const country = countries.find(c => c.isoCode === countryCode);
+  return country?.sampleDocumentNumber || "1234567890";
+};
+
+// Utility function to get default address data
+export const getDefaultAddress = (countryCode: string) => {
+  const country = countries.find(c => c.isoCode === countryCode);
+  return country?.defaultAddress || {
+    state: "State",
+    city: "City",
+    zipCode: "00000",
+    sampleAddress: "Sample Address 123"
+  };
+};

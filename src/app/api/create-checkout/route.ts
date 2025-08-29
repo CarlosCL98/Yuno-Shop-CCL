@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       "country": params.country,
       "customer_id": params.customer_id,
       "amount": {
-        "currency": "COP",
+        "currency": params.currency || "PEN",
         "value": params.amount
       }
     }

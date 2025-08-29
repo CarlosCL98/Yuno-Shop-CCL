@@ -3,18 +3,22 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { usePayments } from "../context/PaymentContext";
+import { useCurrency } from "../context/CurrencyContext";
+import { useCustomer } from "../context/CustomerContext";
 import { loadScript } from '@yuno-payments/sdk-web';
 import { Yuno, YunoInstance } from '@yuno-payments/sdk-web-types';
 import { useRouter } from "next/navigation";
 import InputField from "./InputField";
 import SelectField from "./SelectField";
-import { countries } from "../data/countries";
+import { countries, getCountryData, getPhoneCountryCode, getDefaultDocumentType, getSampleDocumentNumber, getDefaultAddress, getDocumentTypes } from "../data/countries";
 import { PaymentMethod } from "../models/definitions";
 
 export default function CheckoutFormLite() {
   const { cartItems, total } = useCart();
   const [yunoInstance, setYunoInstance] = useState<YunoInstance | null>(null);
   const { addPayment } = usePayments();
+  const { currency, formatPrice, setCountry, country: currencyCountry } = useCurrency();
+  const { customerData, updateCustomerField, updateNestedField, updateCountryData } = useCustomer();
   const [showPaymentSection, setShowPaymentSection] = useState(false);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -23,70 +27,45 @@ export default function CheckoutFormLite() {
   const [VAULTED_TOKEN, setVAULTED_TOKEN] = useState<string>("");
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
-    merchant_customer_id: "shopccl_customertest_001",
-    first_name: "Carlos",
-    last_name: "Medina",
-    email: "carlos.medina@yuno.com",
-    country: "",
-    gender: "M",
-    date_of_birth: "2000-12-14",
-    nationality: "CO",
-    document: {
-      document_type: "CC",
-      document_number: "1234567891",
-    },
-    phone: {
-      number: "3112221111",
-      country_code: "57",
-    },
-    billing_address: {
-      address_line_1: "",
-      address_line_2: "",
-      country: "",
-      state: "Cundinamarca",
-      city: "",
-      zip_code: "11111",
-    },
-    shipping_address: {
-      address_line_1: "Cra 1 No 1 1",
-      address_line_2: "",
-      country: "",
-      state: "Cundinamarca",
-      city: "Bogotá",
-      zip_code: "11111",
-    },
-  });
+
 
   const [sameAsShipping, setSameAsShipping] = useState(false);
 
+  // Sync customer data when currency context country changes (e.g., from navbar)
+  useEffect(() => {
+    if (currencyCountry && currencyCountry !== customerData.country) {
+      updateCountryData(currencyCountry);
+    }
+  }, [currencyCountry, customerData.country, updateCountryData]);
+
   const handleCopyAddress = () => {
-    setFormData((prev) => ({
-      ...prev,
-      billing_address: { ...prev.shipping_address },
-    }));
+    updateNestedField('billing_address', 'address_line_1', customerData.shipping_address.address_line_1);
+    updateNestedField('billing_address', 'address_line_2', customerData.shipping_address.address_line_2);
+    updateNestedField('billing_address', 'country', customerData.shipping_address.country);
+    updateNestedField('billing_address', 'state', customerData.shipping_address.state);
+    updateNestedField('billing_address', 'city', customerData.shipping_address.city);
+    updateNestedField('billing_address', 'zip_code', customerData.shipping_address.zip_code);
   };
 
   const handleDeleteAddress = () => {
-    setFormData((prev) => ({
-      ...prev,
-      billing_address: {
-        address_line_1: "",
-        address_line_2: "",
-        country: "",
-        state: "Cundinamarca",
-        city: "",
-        zip_code: "11111",
-      },
-    }));
+    updateNestedField('billing_address', 'address_line_1', '');
+    updateNestedField('billing_address', 'address_line_2', '');
+    updateNestedField('billing_address', 'country', '');
+    updateNestedField('billing_address', 'state', 'Cundinamarca');
+    updateNestedField('billing_address', 'city', '');
+    updateNestedField('billing_address', 'zip_code', '11111');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // Update currency and all country-related data when country changes
+    if (name === "country") {
+      setCountry(value);
+      updateCountryData(value);
+    } else {
+      updateCustomerField(name as keyof typeof customerData, value);
+    }
   };
 
   const handleNestedChange = (
@@ -94,15 +73,14 @@ export default function CheckoutFormLite() {
     section: "document" | "phone" | "billing_address" | "shipping_address"
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [name]: value,
-      },
-      // Auto-sync the main country field when shipping address country changes
-      ...(section === "shipping_address" && name === "country" && { country: value }),
-    }));
+    
+    // Update currency and all country-related data when country changes in any section
+    if (name === "country") {
+      setCountry(value);
+      updateCountryData(value);
+    } else {
+      updateNestedField(section, name, value);
+    }
   };
 
   const handleSubmit = async (e: any) => {
@@ -112,7 +90,7 @@ export default function CheckoutFormLite() {
       const customerResponse = await fetch("/api/create-customer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(customerData),
       });
 
       const customer = await customerResponse.json();
@@ -126,7 +104,8 @@ export default function CheckoutFormLite() {
         body: JSON.stringify({
           customer_id: customer.id,
           amount: total,
-          country: customer.country
+          country: customer.country,
+          currency: currency
         })
       });
 
@@ -182,7 +161,7 @@ export default function CheckoutFormLite() {
     // First initialize the checkout session
     yunoInstance?.startCheckout({
       checkoutSession: localStorage.getItem("yuno_checkout_session") ?? "",
-      countryCode: formData.country,
+      countryCode: customerData.country,
       elementSelector: "#form-element",
       language: 'en',
       showLoading: true,
@@ -234,7 +213,7 @@ export default function CheckoutFormLite() {
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ oneTimeToken, checkoutSessionId, customerId, total }),
+            body: JSON.stringify({ oneTimeToken, checkoutSessionId, customerId, total, currency, country: customerData.country }),
           });
 
           const payment = await paymentResponse.json();
@@ -243,7 +222,7 @@ export default function CheckoutFormLite() {
             payment_id: payment.id,
             status: payment.sub_status,
             amount: payment.amount.value,
-            currency: payment.amount.currency || "COP",
+            currency: payment.amount.currency || currency,
             created_at: payment.created_at,
           };
           addPayment(paymentData);
@@ -303,12 +282,12 @@ export default function CheckoutFormLite() {
             {cartItems.map((item) => (
               <div key={item.id} className="flex justify-between text-gray-700">
                 <span>{item.name} × {item.quantity}</span>
-                <span>${(item.price * item.quantity).toLocaleString()}</span>
+                <span>{formatPrice(item.price * item.quantity)}</span>
               </div>
             ))}
             <hr className="my-3 border-gray-300" />
             <p className="text-right text-lg font-semibold text-gray-900">
-              Total: ${total.toLocaleString()}
+              Total: {formatPrice(total)}
             </p>
           </div>
         </section>
@@ -319,22 +298,31 @@ export default function CheckoutFormLite() {
         <section>
           <h2 className="text-2xl font-bold mb-4">👤 Payer Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField name="first_name" placeholder="First Name" value={formData.first_name} onChange={handleChange} />
-            <InputField name="last_name" placeholder="Last Name" value={formData.last_name} onChange={handleChange} />
+            <InputField name="first_name" placeholder="First Name" value={customerData.first_name} onChange={handleChange} />
+            <InputField name="last_name" placeholder="Last Name" value={customerData.last_name} onChange={handleChange} />
             <SelectField 
               name="country" 
               placeholder="Select Country" 
-              value={formData.country} 
+              value={customerData.country} 
               onChange={handleChange}
               options={countries.map(country => ({ 
                 value: country.isoCode, 
                 label: country.name 
               }))}
             />
-            <InputField name="email" type="email" placeholder="Email" value={formData.email} onChange={handleChange} />
-            <InputField name="document_type" placeholder="Document Type (CC, CE, PP)" value={formData.document.document_type} onChange={(e) => handleNestedChange(e, "document")} />
-            <InputField name="document_number" placeholder="Document Number" value={formData.document.document_number} onChange={(e) => handleNestedChange(e, "document")} />
-            <InputField name="number" type="tel" placeholder="Phone Number" value={formData.phone.number} onChange={(e) => handleNestedChange(e, "phone")} />
+            <InputField name="email" type="email" placeholder="Email" value={customerData.email} onChange={handleChange} />
+            <SelectField 
+              name="document_type" 
+              placeholder="Document Type" 
+              value={customerData.document.document_type} 
+              onChange={(e) => handleNestedChange(e, "document")}
+              options={getDocumentTypes(customerData.country).map(docType => ({ 
+                value: docType, 
+                label: docType 
+              }))}
+            />
+            <InputField name="document_number" placeholder="Document Number" value={customerData.document.document_number} onChange={(e) => handleNestedChange(e, "document")} />
+            <InputField name="number" type="tel" placeholder="Phone Number" value={customerData.phone.number} onChange={(e) => handleNestedChange(e, "phone")} />
           </div>
         </section>
       )}
@@ -344,12 +332,12 @@ export default function CheckoutFormLite() {
         <section>
           <h2 className="text-2xl font-bold mb-4">📦 Shipping Address</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField name="address_line_1" placeholder="Address" value={formData.shipping_address.address_line_1} onChange={(e) => handleNestedChange(e, "shipping_address")} />
-            <InputField name="city" placeholder="City" value={formData.shipping_address.city} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+            <InputField name="address_line_1" placeholder="Address" value={customerData.shipping_address.address_line_1} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+            <InputField name="city" placeholder="City" value={customerData.shipping_address.city} onChange={(e) => handleNestedChange(e, "shipping_address")} />
             <SelectField 
               name="country" 
               placeholder="Select Country" 
-              value={formData.shipping_address.country} 
+              value={customerData.shipping_address.country} 
               onChange={(e) => handleNestedChange(e, "shipping_address")}
               options={countries.map(country => ({ 
                 value: country.isoCode, 
@@ -378,12 +366,12 @@ export default function CheckoutFormLite() {
 
           {!sameAsShipping && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField name="address_line_1" placeholder="Address" value={formData.billing_address.address_line_1} onChange={(e) => handleNestedChange(e, "billing_address")} />
-              <InputField name="city" placeholder="City" value={formData.billing_address.city} onChange={(e) => handleNestedChange(e, "billing_address")} />
+              <InputField name="address_line_1" placeholder="Address" value={customerData.billing_address.address_line_1} onChange={(e) => handleNestedChange(e, "billing_address")} />
+              <InputField name="city" placeholder="City" value={customerData.billing_address.city} onChange={(e) => handleNestedChange(e, "billing_address")} />
               <SelectField 
                 name="country" 
                 placeholder="Select Country" 
-                value={formData.billing_address.country} 
+                value={customerData.billing_address.country} 
                 onChange={(e) => handleNestedChange(e, "billing_address")}
                 options={countries.map(country => ({ 
                   value: country.isoCode, 
@@ -574,7 +562,7 @@ export default function CheckoutFormLite() {
                     
                     <div className="flex justify-between py-3 border-t border-gray-300">
                       <span className="text-base font-semibold text-gray-900">Total:</span>
-                      <span className="text-lg font-bold text-blue-600">${total.toLocaleString()}</span>
+                      <span className="text-lg font-bold text-blue-600">{formatPrice(total)}</span>
                     </div>
                   </div>
                   

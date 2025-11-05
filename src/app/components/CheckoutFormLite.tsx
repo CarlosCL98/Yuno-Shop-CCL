@@ -196,7 +196,7 @@ export default function CheckoutFormLite() {
       yunoPaymentResult: (status) => {
         console.log('Payment result:', status);
         if (status === "SUCCEEDED") {
-          router.push("/profile");
+          router.push("/payment-result?status=success");
         }
       },
       /**

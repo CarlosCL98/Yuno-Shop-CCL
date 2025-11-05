@@ -8,11 +8,18 @@ export async function POST(request: Request) {
     const merchant_order_id = generateUniqueId("shopccl_sessioncheckouttest");
     const apiBaseUrl = getYunoApiBaseUrl(process.env.NEXT_PUBLIC_API_KEY!);
 
+    // DEBUG: Log environment variables (safely)
+    console.log("🔧 Debug Info:");
+    console.log("- API Base URL:", apiBaseUrl);
+    console.log("- Account Code:", process.env.ACCOUNT_CODE ? "✓ Set" : "✗ Missing");
+    console.log("- Account Code value:", process.env.ACCOUNT_CODE?.substring(0, 8) + "...");
+    console.log("- Public Key prefix:", process.env.NEXT_PUBLIC_API_KEY?.substring(0, 10) + "...");
+
     const body = {
       "account_id": process.env.ACCOUNT_CODE!,
       "merchant_order_id": merchant_order_id,
       "payment_description": "Test Yuno Shop CCL",
-      "callback_url": "https://localhost:3000/profile",
+      //"callback_url": "https://localhost:3000/profile",
       "country": params.country,
       "customer_id": params.customer_id,
       "amount": {
@@ -23,6 +30,11 @@ export async function POST(request: Request) {
         "plan_id": "9d48bcd9-66ba-4194-969f-01db08a2e381"
       }*/
     }
+
+    console.log("📤 Request to Yuno:", {
+      url: `${apiBaseUrl}/v1/checkout/sessions`,
+      body: { ...body, account_id: body.account_id.substring(0, 8) + "..." }
+    });
 
     const response = await fetch(`${apiBaseUrl}/v1/checkout/sessions`, {
       method: "POST",
@@ -36,9 +48,28 @@ export async function POST(request: Request) {
 
     const data = await response.json();
 
+    console.log("📥 Yuno Response:", {
+      status: response.status,
+      ok: response.ok,
+      data: data
+    });
+
+    // Return error details if not successful
+    if (!response.ok) {
+      console.error("❌ Yuno API Error:", data);
+      return NextResponse.json({
+        error: "Yuno API Error",
+        status: response.status,
+        details: data
+      }, { status: response.status });
+    }
+
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error creating Yunos session:", error);
-    return NextResponse.json({ error: "Error creating Yunos session" }, { status: 500 });
+    console.error("❌ Server Error:", error);
+    return NextResponse.json({ 
+      error: "Error creating Yuno session",
+      message: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
   }
 }

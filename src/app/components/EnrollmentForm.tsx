@@ -139,7 +139,7 @@ export default function EnrollmentForm() {
                 body: JSON.stringify({
                     customer_session: localStorage.getItem("yuno_customer_session"),
                     payment_method_type: currentPaymentMethod.type,
-                    country: customerData.country,
+                    country: customerData.country || '',
                     customer_data: customerData
                 }),
             });
@@ -326,19 +326,19 @@ export default function EnrollmentForm() {
                             <InputField
                                 name="first_name"
                                 placeholder="First Name"
-                                value={customerData.first_name}
+                                value={customerData.first_name || ''}
                                 onChange={handleChange}
                             />
                             <InputField
                                 name="last_name"
                                 placeholder="Last Name"
-                                value={customerData.last_name}
+                                value={customerData.last_name || ''}
                                 onChange={handleChange}
                             />
                             <SelectField
                                 name="country"
                                 placeholder="Select Country"
-                                value={customerData.country}
+                                value={customerData.country || ''}
                                 onChange={handleChange}
                                 options={countries.map(country => ({
                                     value: country.isoCode,
@@ -349,15 +349,15 @@ export default function EnrollmentForm() {
                                 name="email"
                                 type="email"
                                 placeholder="Email"
-                                value={customerData.email}
+                                value={customerData.email || ''}
                                 onChange={handleChange}
                             />
                             <SelectField
                                 name="document_type"
                                 placeholder="Document Type"
-                                value={customerData.document.document_type}
+                                value={customerData.document?.document_type || ''}
                                 onChange={(e) => handleNestedChange(e, "document")}
-                                options={getDocumentTypes(customerData.country).map(docType => ({
+                                options={getDocumentTypes(customerData.country || '').map(docType => ({
                                     value: docType,
                                     label: docType
                                 }))}
@@ -365,14 +365,14 @@ export default function EnrollmentForm() {
                             <InputField
                                 name="document_number"
                                 placeholder="Document Number"
-                                value={customerData.document.document_number}
+                                value={customerData.document?.document_number || ''}
                                 onChange={(e) => handleNestedChange(e, "document")}
                             />
                             <InputField
                                 name="number"
                                 type="tel"
                                 placeholder="Phone Number"
-                                value={customerData.phone.number}
+                                value={customerData.phone?.number || ''}
                                 onChange={(e) => handleNestedChange(e, "phone")}
                             />
                         </div>

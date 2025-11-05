@@ -43,6 +43,7 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
       setCurrencyState(defaultCurrency);
       setCurrencySymbolState(defaultSymbol);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update currency when country changes

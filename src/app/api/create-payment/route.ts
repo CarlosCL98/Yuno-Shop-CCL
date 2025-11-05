@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
         // Add browser_info if it was provided from the client
         //if (params.browserInfo) {
-            //customer_payer.browser_info = params.browserInfo;
+        //customer_payer.browser_info = params.browserInfo;
         //}
 
         const body = {
@@ -45,143 +45,363 @@ export async function POST(request: Request) {
                 "airline": {
                     "legs": [
                         {
-                            "departure_airport": "BOG",
-                            "departure_datetime": "2025-11-22T04:26:00.000",
-                            "arrival_airport": "LIM",
-                            "arrival_datetime": "2025-11-22T05:50:00.000",
-                            "carrier_code": "JA",
-                            "flight_number": "7255",
-                            "fare_basis_code": "",
-                            "fare_class_code": "",
-                            "base_fare": 0.00,
+                            "departure_airport": "CCP",
+                            "arrival_airport": "ANF",
+                            "departure_datetime": "2025-11-05T15:19:00",
+                            "arrival_datetime": "2025-11-05T17:44:00",
+                            "arrival_airport_timezone": "GMT-3",
+                            "base_fare": 0,
                             "base_fare_currency": null,
-                            "stopover_code": "   ",
-                            "departure_airport_country": "COL",
-                            "departure_airport_city": "BOG",
-                            "arrival_airport_country": "PER",
-                            "arrival_airport_city": "LIM"
+                            "carrier_code": "JA",
+                            "departure_airport_timezone": "GMT-3",
+                            "fare_basis_code": null,
+                            "fare_class_code": null,
+                            "flight_number": "501",
+                            "stopover_code": null,
+                            "route_order": 0,
+                            "order": 0
+                        },
+                        {
+                            "departure_airport": "ANF",
+                            "arrival_airport": "SCL",
+                            "departure_datetime": "2025-11-08T23:43:00",
+                            "arrival_datetime": "2025-11-09T01:37:00",
+                            "arrival_airport_timezone": "GMT-3",
+                            "base_fare": 0,
+                            "base_fare_currency": null,
+                            "carrier_code": "JA",
+                            "departure_airport_timezone": "GMT-3",
+                            "fare_basis_code": null,
+                            "fare_class_code": null,
+                            "flight_number": "501",
+                            "stopover_code": null,
+                            "route_order": 1,
+                            "order": 0
+                        },
+                        {
+                            "departure_airport": "SCL",
+                            "arrival_airport": "CCP",
+                            "departure_datetime": "2025-11-09T12:15:00",
+                            "arrival_datetime": "2025-11-09T13:24:00",
+                            "arrival_airport_timezone": "GMT-3",
+                            "base_fare": 0,
+                            "base_fare_currency": null,
+                            "carrier_code": "JA",
+                            "departure_airport_timezone": "GMT-3",
+                            "fare_basis_code": null,
+                            "fare_class_code": null,
+                            "flight_number": "501",
+                            "stopover_code": null,
+                            "route_order": 2,
+                            "order": 0
                         }
                     ],
                     "passengers": [
                         {
-                            "country": "US",
-                            "date_of_birth": "1992-03-02",
+                            "country": null,
+                            "date_of_birth": null,
                             "document": null,
-                            "first_name": "juan",
-                            "last_name": "perez",
+                            "first_name": "Cristopher",
+                            "last_name": "Evangelista",
                             "loyalty_number": null,
                             "loyalty_tier": null,
                             "middle_name": "",
-                            "nationality": "CO",
+                            "nationality": null,
                             "type": "A",
                             "email": null,
                             "phone": null
                         }
                     ],
-                    "pnr": "CCLZ2E",
+                    "pnr": "I1JR8Y",
                     "tickets": [
                         {
-                            "ticket_number": "123456",
+                            "ticket_number": null,
                             "restricted": false,
-                            "total_fare_amount": 80.00,
-                            "total_tax_amount": 22.00,
-                            "total_fee_amount": 14.00,
-                            "e_ticket": false,
-                            "issue": {
-                                "date": "2025-10-25T17:53:38",
-                                "booking_system_code": "WWE9R7",
-                                "booking_system_name": "Test"
-                            }
+                            "total_fare_amount": 260.86,
+                            "total_tax_amount": 0,
+                            "total_fee_amount": 0,
+                            "e_ticket": false
                         }
                     ]
                 },
                 "order": {
-                    "fee_amount": 0,
                     "items": [
                         {
+                            "category": "Ancillaries",
                             "brand": null,
-                            "category": "Airline",
                             "id": "BAGD",
                             "manufacture_part_number": null,
-                            "name": "Ancillaries",
+                            "name": "Checked Ba",
                             "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 0
+                            "sku_code": "SSR",
+                            "unit_amount": 9
                         },
                         {
+                            "category": "Ancillaries",
                             "brand": null,
-                            "category": "Airline",
+                            "id": "BAGD",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 9
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
                             "id": "LBGD",
                             "manufacture_part_number": null,
-                            "name": "Ancillaries",
+                            "name": "Large Cabi",
                             "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 0
+                            "sku_code": "SSR",
+                            "unit_amount": 16.11
                         },
                         {
+                            "category": "Ancillaries",
                             "brand": null,
-                            "category": "Airline",
+                            "id": "LBGD",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 16.11
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
                             "id": "STB2",
                             "manufacture_part_number": null,
-                            "name": "Ancillaries",
+                            "name": "Seat Fee P",
                             "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 0
+                            "sku_code": "SSR",
+                            "unit_amount": 14.7
                         },
                         {
+                            "category": "Ancillaries",
                             "brand": null,
-                            "category": "Airline",
+                            "id": "STB2",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 14.7
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
                             "id": "FLXB",
                             "manufacture_part_number": null,
-                            "name": "Ancillaries",
+                            "name": "Flexi SMAR",
                             "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 0
+                            "sku_code": "SSR",
+                            "unit_amount": 7
                         },
                         {
+                            "category": "Ancillaries",
                             "brand": null,
-                            "category": "Airline",
+                            "id": "FLXB",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 7
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
                             "id": "PBD",
                             "manufacture_part_number": null,
-                            "name": "Ancillaries",
+                            "name": "Priority B",
                             "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 0
+                            "sku_code": "SSR",
+                            "unit_amount": 3.51
                         },
                         {
+                            "category": "Ancillaries",
                             "brand": null,
-                            "category": "Airline",
+                            "id": "PBD",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 3.51
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
                             "id": "APCD",
                             "manufacture_part_number": null,
-                            "name": "Ancillaries",
+                            "name": "Airport Ch",
                             "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 0
+                            "sku_code": "SSR",
+                            "unit_amount": 3.51
                         },
                         {
+                            "category": "Ancillaries",
                             "brand": null,
-                            "category": "Airline",
-                            "id": "ACAA",
+                            "id": "APCD",
                             "manufacture_part_number": null,
-                            "name": "Ancillaries",
+                            "name": "Ancillary Service",
                             "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 0
+                            "sku_code": "SSR",
+                            "unit_amount": 3.51
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "BAGD",
+                            "manufacture_part_number": null,
+                            "name": "Checked Ba",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 9
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "BAGD",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 9
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "LBGD",
+                            "manufacture_part_number": null,
+                            "name": "Large Cabi",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 16.11
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "LBGD",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 16.11
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "STB2",
+                            "manufacture_part_number": null,
+                            "name": "Seat Fee P",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 15
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "STB2",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 15
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "STB2",
+                            "manufacture_part_number": null,
+                            "name": "Seat Fee P",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 15.31
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "STB2",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 15.31
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "FLXB",
+                            "manufacture_part_number": null,
+                            "name": "Flexi SMAR",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 7
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "FLXB",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 7
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "PBD",
+                            "manufacture_part_number": null,
+                            "name": "Priority B",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 3.51
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "PBD",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 3.51
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "APCD",
+                            "manufacture_part_number": null,
+                            "name": "Airport Ch",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 3.51
+                        },
+                        {
+                            "category": "Ancillaries",
+                            "brand": null,
+                            "id": "APCD",
+                            "manufacture_part_number": null,
+                            "name": "Ancillary Service",
+                            "quantity": 1,
+                            "sku_code": "SSR",
+                            "unit_amount": 3.51
                         }
-                    ],
-                    "shipping_amount": 0,
-                    "sales_channel": "WebDuringBooking"
+                    ]
                 }
             },
             "metadata": [
                 {
                     "key": "processor",
-                    "value": "YUNO"
+                    "value": "NUVEI"
                 },
+                {
+                    "key": "sales_channel",
+                    "value": "PortalDuringBooking"
+                }/*,
                 {
                     "key": "with3DS",
                     "value": "no"
-                }/*,
+                },
                 {
                     "key": "fraudValidation",
                     "value": "yes"

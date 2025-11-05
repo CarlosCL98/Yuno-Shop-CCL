@@ -4,37 +4,37 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getCountryData, getPhoneCountryCode, getDefaultDocumentType, getSampleDocumentNumber, getDefaultAddress } from "../data/countries";
 
 export interface CustomerData {
-  merchant_customer_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  country: string;
-  gender: string;
-  date_of_birth: string;
-  nationality: string;
-  document: {
-    document_type: string;
-    document_number: string;
+  merchant_customer_id?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  country?: string;
+  gender?: string;
+  date_of_birth?: string;
+  nationality?: string;
+  document?: {
+    document_type?: string;
+    document_number?: string;
   };
-  phone: {
-    number: string;
-    country_code: string;
+  phone?: {
+    number?: string;
+    country_code?: string;
   };
-  billing_address: {
-    address_line_1: string;
-    address_line_2: string;
-    country: string;
-    state: string;
-    city: string;
-    zip_code: string;
+  billing_address?: {
+    address_line_1?: string;
+    address_line_2?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    zip_code?: string;
   };
-  shipping_address: {
-    address_line_1: string;
-    address_line_2: string;
-    country: string;
-    state: string;
-    city: string;
-    zip_code: string;
+  shipping_address?: {
+    address_line_1?: string;
+    address_line_2?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    zip_code?: string;
   };
 }
 
@@ -56,18 +56,18 @@ const getDefaultCustomerData = (): CustomerData => ({
   first_name: "Test",
   last_name: "User",
   email: "carlos.medina@y.uno", // For MP test_user_1631154188@testuser.com
-  country: "CO",
+  /*country: "CO",
   gender: "M",
   date_of_birth: "2000-12-14",
   nationality: "CO",
   document: {
     document_type: "CC",
     document_number: "1234567890",
-  },
+  },*/
   phone: {
     number: "969929157",
     country_code: "51",
-  },
+  }/*,
   billing_address: {
     address_line_1: "Cra 15 No 93-50",
     address_line_2: "Apt 301",
@@ -83,7 +83,7 @@ const getDefaultCustomerData = (): CustomerData => ({
     state: "Cundinamarca",
     city: "Bogotá",
     zip_code: "010101",
-  },
+  },*/
 });
 
 export const CustomerProvider = ({ children }: { children: ReactNode }) => {
@@ -108,6 +108,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
     } else {
       localStorage.setItem("customerData", JSON.stringify(customerData));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Save customer data to localStorage whenever it changes

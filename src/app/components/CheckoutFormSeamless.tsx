@@ -62,6 +62,7 @@ export default function CheckoutFormSeamless() {
     if (cachedCustomerId && currentStep === 'customer_info') {
       handleAutoLoadCustomer(cachedCustomerId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAutoLoadCustomer = async (existingCustomerId: string) => {
@@ -127,12 +128,12 @@ export default function CheckoutFormSeamless() {
   };
 
   const handleCopyAddress = () => {
-    updateNestedField('billing_address', 'address_line_1', customerData.shipping_address.address_line_1);
-    updateNestedField('billing_address', 'address_line_2', customerData.shipping_address.address_line_2);
-    updateNestedField('billing_address', 'country', customerData.shipping_address.country);
-    updateNestedField('billing_address', 'state', customerData.shipping_address.state);
-    updateNestedField('billing_address', 'city', customerData.shipping_address.city);
-    updateNestedField('billing_address', 'zip_code', customerData.shipping_address.zip_code);
+    updateNestedField('billing_address', 'address_line_1', customerData.shipping_address?.address_line_1 || '');
+    updateNestedField('billing_address', 'address_line_2', customerData.shipping_address?.address_line_2 || '');
+    updateNestedField('billing_address', 'country', customerData.shipping_address?.country || '');
+    updateNestedField('billing_address', 'state', customerData.shipping_address?.state || '');
+    updateNestedField('billing_address', 'city', customerData.shipping_address?.city || '');
+    updateNestedField('billing_address', 'zip_code', customerData.shipping_address?.zip_code || '');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -214,7 +215,7 @@ export default function CheckoutFormSeamless() {
 
     yunoInstance.startCheckout({
       checkoutSession: checkoutSession,
-      countryCode: customerData.country,
+      countryCode: customerData.country || '',
       elementSelector: "#yuno-form-element",
       language: 'en',
       showLoading: true,
@@ -374,38 +375,38 @@ export default function CheckoutFormSeamless() {
           <section>
             <h2 className="text-2xl font-bold mb-4">👤 Payer Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField name="first_name" placeholder="First Name" value={customerData.first_name} onChange={handleChange} required />
-              <InputField name="last_name" placeholder="Last Name" value={customerData.last_name} onChange={handleChange} required />
+              <InputField name="first_name" placeholder="First Name" value={customerData.first_name || ''} onChange={handleChange} required />
+              <InputField name="last_name" placeholder="Last Name" value={customerData.last_name || ''} onChange={handleChange} required />
               <SelectField 
                 name="country" 
                 placeholder="Select Country" 
-                value={customerData.country} 
+                value={customerData.country || ''} 
                 onChange={handleChange}
                 options={countries.map(country => ({ value: country.isoCode, label: country.name }))}
                 required
               />
-              <InputField name="email" type="email" placeholder="Email" value={customerData.email} onChange={handleChange} required />
+              <InputField name="email" type="email" placeholder="Email" value={customerData.email || ''} onChange={handleChange} required />
               <SelectField 
                 name="document_type" 
                 placeholder="Document Type" 
-                value={customerData.document.document_type} 
+                value={customerData.document?.document_type || ''} 
                 onChange={(e) => handleNestedChange(e, "document")}
-                options={getDocumentTypes(customerData.country).map(docType => ({ value: docType, label: docType }))}
+                options={getDocumentTypes(customerData.country || '').map(docType => ({ value: docType, label: docType }))}
               />
-              <InputField name="document_number" placeholder="Document Number" value={customerData.document.document_number} onChange={(e) => handleNestedChange(e, "document")} />
-              <InputField name="number" type="tel" placeholder="Phone Number" value={customerData.phone.number} onChange={(e) => handleNestedChange(e, "phone")} />
+              <InputField name="document_number" placeholder="Document Number" value={customerData.document?.document_number || ''} onChange={(e) => handleNestedChange(e, "document")} />
+              <InputField name="number" type="tel" placeholder="Phone Number" value={customerData.phone?.number || ''} onChange={(e) => handleNestedChange(e, "phone")} />
             </div>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold mb-4">📦 Shipping Address</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField name="address_line_1" placeholder="Address" value={customerData.shipping_address.address_line_1} onChange={(e) => handleNestedChange(e, "shipping_address")} />
-              <InputField name="city" placeholder="City" value={customerData.shipping_address.city} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+              <InputField name="address_line_1" placeholder="Address" value={customerData.shipping_address?.address_line_1 || ''} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+              <InputField name="city" placeholder="City" value={customerData.shipping_address?.city || ''} onChange={(e) => handleNestedChange(e, "shipping_address")} />
               <SelectField 
                 name="country" 
                 placeholder="Select Country" 
-                value={customerData.shipping_address.country} 
+                value={customerData.shipping_address?.country || ''} 
                 onChange={(e) => handleNestedChange(e, "shipping_address")}
                 options={countries.map(country => ({ value: country.isoCode, label: country.name }))}
               />
@@ -428,12 +429,12 @@ export default function CheckoutFormSeamless() {
 
             {!sameAsShipping && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InputField name="address_line_1" placeholder="Address" value={customerData.billing_address.address_line_1} onChange={(e) => handleNestedChange(e, "billing_address")} />
-                <InputField name="city" placeholder="City" value={customerData.billing_address.city} onChange={(e) => handleNestedChange(e, "billing_address")} />
+                <InputField name="address_line_1" placeholder="Address" value={customerData.billing_address?.address_line_1 || ''} onChange={(e) => handleNestedChange(e, "billing_address")} />
+                <InputField name="city" placeholder="City" value={customerData.billing_address?.city || ''} onChange={(e) => handleNestedChange(e, "billing_address")} />
                 <SelectField 
                   name="country" 
                   placeholder="Select Country" 
-                  value={customerData.billing_address.country} 
+                  value={customerData.billing_address?.country || ''} 
                   onChange={(e) => handleNestedChange(e, "billing_address")}
                   options={countries.map(country => ({ value: country.isoCode, label: country.name }))}
                 />

@@ -17,11 +17,16 @@ export default function CheckoutFormFull() {
   const { cartItems, total } = useCart();
   const [yunoInstance, setYunoInstance] = useState<YunoInstance | null>(null);
   const { addPayment } = usePayments();
-  const { currency, formatPrice, setCountry, country: currencyCountry } = useCurrency();
-  const { customerData, updateCustomerField, updateNestedField, updateCountryData } = useCustomer();
+  const { currency, formatPrice, setCountry, country: currencyCountry, convertPrice } = useCurrency();
+  const { customerData, updateCustomerField, updateNestedField, updateCountryData, clearCachedCustomerId } = useCustomer();
   const [showPaymentSection, setShowPaymentSection] = useState(false);
   const [sameAsShipping, setSameAsShipping] = useState(false);
+  const [customAmount, setCustomAmount] = useState<string>("");
+  const [useCustomAmount, setUseCustomAmount] = useState(false);
   const router = useRouter();
+
+  // Calculate the final amount to use (custom or cart total)
+  const finalAmount = useCustomAmount && customAmount ? parseFloat(customAmount) : total;
 
   // Sync customer data when currency context country changes (e.g., from navbar)
   useEffect(() => {
@@ -91,12 +96,15 @@ export default function CheckoutFormFull() {
       console.log("Yuno answer customer:", customer);
 
       // Create the checkout session
+      // If using custom amount, it's already in the selected currency, so don't convert
+      // If using cart total, convert from USD to selected currency
+      const convertedTotal = useCustomAmount ? finalAmount : convertPrice(finalAmount, "USD");
       const response = await fetch("/api/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_id: customer.id,
-          amount: total,
+          amount: convertedTotal,
           country: customer.country,
           currency: currency
         })
@@ -121,6 +129,7 @@ export default function CheckoutFormFull() {
       showLoading: true,
       issuersFormEnable: true,
       showPaymentStatus: true,
+      showPayButton:true,
       /**
        * Set isCreditCardProcessingOnly as true to process all card transactions are credit
        * isCreditCardProcessingOnly: true | false | undefined
@@ -159,7 +168,9 @@ export default function CheckoutFormFull() {
       yunoError: (message, data) => {
         console.error('Payment error:', message, data);
       },
-      async yunoCreatePayment(oneTimeToken) {
+      async yunoCreatePayment(oneTimeToken,tokenWithInformation) {
+        console.log("Token with information:", tokenWithInformation);
+        console.log("One time token:", oneTimeToken); 
         /**
         * The createPayment function calls the backend to create a payment in Yuno.
         * It uses the following endpoint https://docs.y.uno/reference/create-payment
@@ -168,10 +179,20 @@ export default function CheckoutFormFull() {
           // Create the payment
           const customerId = localStorage.getItem("yuno_customer_id");
           const checkoutSessionId = localStorage.getItem("yuno_checkout_session");
+          // If using custom amount, it's already in the selected currency, so don't convert
+          // If using cart total, convert from USD to selected currency
+          const convertedTotal = useCustomAmount ? finalAmount : convertPrice(total, "USD");
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ oneTimeToken, checkoutSessionId, customerId, total, currency, country: customerData.country }),
+            body: JSON.stringify({ 
+              oneTimeToken, 
+              checkoutSessionId, 
+              customerId, 
+              total: convertedTotal, 
+              currency, 
+              country: customerData.country
+            }),
           });
 
           const payment = await paymentResponse.json();
@@ -186,6 +207,7 @@ export default function CheckoutFormFull() {
           addPayment(paymentData);
           const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: true });
           console.log("Response action:", responseAction);
+          /*
           if (payment.checkout.sdk_action_required) {      
             if (responseAction?.action === "REDIRECT_URL") {
               window.location.href = responseAction.action;
@@ -194,7 +216,7 @@ export default function CheckoutFormFull() {
             }
           } else {
             console.log("No action needed.");
-          }
+          }*/
         } catch (error) {
           console.error("Error sending data:", error);
         }
@@ -205,7 +227,7 @@ export default function CheckoutFormFull() {
          * By default the system uses 'modal'
          * It is optional
          */
-        type: 'element',
+        type: 'modal',
         /**
          * Element where the form will be rendered.
          * It is optional
@@ -221,9 +243,7 @@ export default function CheckoutFormFull() {
         }
       },
     });
-    yunoInstance?.mountCheckout({
-      paymentMethodType: "CARD"
-    });
+    yunoInstance?.mountCheckout();
   };
 
   const handleStartPayment = (e: any) => {
@@ -280,8 +300,45 @@ export default function CheckoutFormFull() {
           ))}
           <hr className="my-3 border-gray-300" />
           <p className="text-right text-lg font-semibold text-gray-900">
-            Total: {formatPrice(total)}
+            Cart Total: {formatPrice(total)}
           </p>
+        </div>
+
+        {/* Custom Amount for Testing */}
+        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <label className="flex items-center gap-2 mb-3 text-gray-700 font-medium">
+            <input
+              type="checkbox"
+              checked={useCustomAmount}
+              onChange={(e) => {
+                setUseCustomAmount(e.target.checked);
+                if (!e.target.checked) setCustomAmount("");
+              }}
+              className="w-4 h-4"
+            />
+            🧪 Use custom amount for testing
+          </label>
+          {useCustomAmount && (
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
+                placeholder="Enter test amount"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <span className="flex items-center px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
+                {currency}
+              </span>
+            </div>
+          )}
+          {useCustomAmount && customAmount && (
+            <p className="mt-2 text-sm font-semibold text-blue-700">
+              Test Amount: {currency} {parseFloat(customAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+          )}
         </div>
       </section>
 
@@ -368,13 +425,23 @@ export default function CheckoutFormFull() {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full mt-4 transition"
-        >
-          Confirm Information
-        </button>
+        <div className="flex gap-4 mt-4">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition"
+          >
+            Confirm Information
+          </button>
+          <button
+            type="button"
+            onClick={clearCachedCustomerId}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm transition"
+            title="Clear cached customer data to force update"
+          >
+            🔄 Clear Cache
+          </button>
+        </div>
       </section>
 
       {/* Payment Methods */}

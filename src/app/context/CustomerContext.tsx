@@ -45,16 +45,17 @@ interface CustomerContextType {
   updateNestedField: (section: keyof Pick<CustomerData, 'document' | 'phone' | 'billing_address' | 'shipping_address'>, field: string, value: string) => void;
   updateCountryData: (countryCode: string) => void;
   resetCustomerData: () => void;
+  clearCachedCustomerId: () => void;
 }
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
 // Default customer data
 const getDefaultCustomerData = (): CustomerData => ({
-  merchant_customer_id: "shopccl_customertest_001",
+  merchant_customer_id: "shopccl_customertest_001_cl",
   first_name: "Test",
   last_name: "User",
-  email: "test@y.uno",
+  email: "carlos.medina@y.uno", // For MP test_user_1631154188@testuser.com
   country: "CO",
   gender: "M",
   date_of_birth: "2000-12-14",
@@ -64,8 +65,8 @@ const getDefaultCustomerData = (): CustomerData => ({
     document_number: "1234567890",
   },
   phone: {
-    number: "3112221111",
-    country_code: "57",
+    number: "969929157",
+    country_code: "51",
   },
   billing_address: {
     address_line_1: "Cra 15 No 93-50",
@@ -73,7 +74,7 @@ const getDefaultCustomerData = (): CustomerData => ({
     country: "CO",
     state: "Cundinamarca",
     city: "Bogotá",
-    zip_code: "11001",
+    zip_code: "010101",
   },
   shipping_address: {
     address_line_1: "Cra 1 No 1 1",
@@ -81,12 +82,18 @@ const getDefaultCustomerData = (): CustomerData => ({
     country: "CO",
     state: "Cundinamarca",
     city: "Bogotá",
-    zip_code: "11111",
+    zip_code: "010101",
   },
 });
 
 export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customerData, setCustomerData] = useState<CustomerData>(getDefaultCustomerData());
+
+  // Clear cached customer ID to force creating/updating customer
+  const clearCachedCustomerId = () => {
+    localStorage.removeItem("yuno_customer_id");
+    localStorage.removeItem("customerData");
+  };
 
   // Load customer data from localStorage on mount
   useEffect(() => {
@@ -98,6 +105,8 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error parsing stored customer data:", error);
         setCustomerData(getDefaultCustomerData());
       }
+    } else {
+      localStorage.setItem("customerData", JSON.stringify(customerData));
     }
   }, []);
 
@@ -114,6 +123,11 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   // Update a single field
   const updateCustomerField = (field: keyof CustomerData, value: any) => {
     setCustomerData((prev) => ({ ...prev, [field]: value }));
+    
+    // Clear cached customer ID for significant changes
+    if (['merchant_customer_id', 'email', 'country'].includes(field)) {
+      clearCachedCustomerId();
+    }
   };
 
   // Update nested fields (document, phone, addresses)
@@ -170,11 +184,15 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
         address_line_1: defaultAddress.sampleAddress,
       },
     }));
+    
+    // Clear cached customer ID when country changes
+    clearCachedCustomerId();
   };
 
   // Reset to default customer data
   const resetCustomerData = () => {
     setCustomerData(getDefaultCustomerData());
+    clearCachedCustomerId();
   };
 
   const value: CustomerContextType = {
@@ -184,6 +202,7 @@ export const CustomerProvider = ({ children }: { children: ReactNode }) => {
     updateNestedField,
     updateCountryData,
     resetCustomerData,
+    clearCachedCustomerId,
   };
 
   return (

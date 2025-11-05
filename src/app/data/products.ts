@@ -3,7 +3,7 @@ import { Product } from "../models/definitions";
 export const products: Product[] = [
   { id: 1, name: "T-Shirt", price: 11.00, image: "/tshirt.png" },
   { id: 2, name: "Pants", price: 22.40, image: "/pants.png" },
-  { id: 3, name: "Jogger", price: 7.50, image: "/jogger.png" },
+  { id: 3, name: "Jogger", price: 0.20, image: "/jogger.png" },
   { id: 4, name: "Dress", price: 37.00, image: "/dress.png" },
   { id: 5, name: "Shoes", price: 87.00, image: "/shoes.png" },
   { id: 6, name: "Sandals", price: 10.00, image: "/sandals.png" },

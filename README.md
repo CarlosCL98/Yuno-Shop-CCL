@@ -1,22 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Yuno Shop CCL
+
+This is a [Next.js](https://nextjs.org) e-commerce application integrated with [Yuno Payments](https://yuno.com/) for payment processing.
+
+## Features
+
+- 🛒 Shopping cart functionality
+- 💳 Payment processing with Yuno
+- 🔄 Payment method enrollment
+- 📱 Responsive design
+- 🌍 Multi-currency support
+- 📊 Payment result tracking
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ 
+- Yuno Payments account and API keys
+
+### Environment Variables
+
+Create a `.env.local` file in the root directory with the following variables:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Yuno API Configuration
+NEXT_PUBLIC_API_KEY=your_yuno_public_api_key
+PRIVATE_SECRET_KEY=your_yuno_private_secret_key
+ACCOUNT_CODE=your_yuno_account_code
+
+# Application Configuration
+NEXT_PUBLIC_BASE_URL=http://localhost:3000  # For production, use your domain
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Run the development server:
+```bash
+npm run dev
+```
+
+3. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Payment Callback Configuration
+
+The application includes a comprehensive payment callback system:
+
+### Callback URLs
+
+- **Payment Result Page**: `/payment-result` - Shows payment success/failure status
+- **Webhook Endpoint**: `/api/yuno-webhook` - Handles Yuno webhook notifications
+
+### Environment Setup
+
+For production deployment, make sure to:
+
+1. Set `NEXT_PUBLIC_BASE_URL` to your production domain
+2. Configure webhook URLs in your Yuno dashboard to point to:
+   - `https://yourdomain.com/api/yuno-webhook`
+
+### Payment Flow
+
+1. User completes checkout
+2. Yuno processes payment
+3. User is redirected to `/payment-result` with payment status
+4. Yuno sends webhook notifications to `/api/yuno-webhook`
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

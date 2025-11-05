@@ -28,6 +28,7 @@ export interface Country {
 }
 
 export interface PaymentMethod {
+    id?: string;
     name: string;
     vaulted_token: string | null;
     description: string;

@@ -13,3 +13,20 @@ export function generateUniqueId(prefix: string = "id"): string {
 
     return `${prefix}_${formattedDate}`;
 }
+
+/**
+ * Determines the Yuno API base URL based on the public API key
+ * @param publicApiKey - The public API key from environment variables
+ * @returns The appropriate Yuno API base URL
+ */
+export function getYunoApiBaseUrl(publicApiKey: string): string {
+    if (publicApiKey.startsWith("sandbox_")) {
+        return "https://api-sandbox.y.uno";
+    } else if (publicApiKey.startsWith("prod_")) {
+        return "https://api.y.uno";
+    } else {
+        // Default to sandbox for safety
+        console.warn("Public API key doesn't match expected format, defaulting to sandbox environment");
+        return "https://api-sandbox.y.uno";
+    }
+}

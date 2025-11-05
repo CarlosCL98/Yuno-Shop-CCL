@@ -25,11 +25,11 @@ export const countries: Country[] = [
     phoneCountryCode: "51",
     documentTypes: ["DNI", "CE", "PP"],
     defaultDocumentType: "DNI",
-    sampleDocumentNumber: "12345678",
+    sampleDocumentNumber: "46701208",
     defaultAddress: {
       state: "Lima",
       city: "Lima",
-      zipCode: "15001",
+      zipCode: "010101",
       sampleAddress: "Av. Javier Prado Este 123"
     }
   },
@@ -111,6 +111,38 @@ export const countries: Country[] = [
       city: "Santiago",
       zipCode: "7500000",
       sampleAddress: "Av. Providencia 1234"
+    }
+  },
+  { 
+    isoCode: 'US', 
+    name: "United States", 
+    currency: "USD", 
+    currencySymbol: "$",
+    phoneCountryCode: "1",
+    documentTypes: ["SSN", "PP"],
+    defaultDocumentType: "SSN",
+    sampleDocumentNumber: "123-45-6789",
+    defaultAddress: {
+      state: "California",
+      city: "Los Angeles",
+      zipCode: "90210",
+      sampleAddress: "123 Main Street"
+    }
+  },
+  { 
+    isoCode: 'AQ', 
+    name: "Antártida", 
+    currency: "USD", 
+    currencySymbol: "$",
+    phoneCountryCode: "672",
+    documentTypes: ["PP", "ID"],
+    defaultDocumentType: "PP",
+    sampleDocumentNumber: "A12345678",
+    defaultAddress: {
+      state: "Territorio Antártico",
+      city: "Base McMurdo",
+      zipCode: "00000",
+      sampleAddress: "Research Station 1"
     }
   }
 ];

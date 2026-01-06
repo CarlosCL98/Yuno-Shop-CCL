@@ -5,6 +5,7 @@ import { getCountryData, getPhoneCountryCode, getDefaultDocumentType, getSampleD
 
 export interface CustomerData {
   merchant_customer_id?: string;
+  merchant_customer_created_at?: string;
   first_name?: string;
   last_name?: string;
   email?: string;
@@ -52,22 +53,23 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 
 // Default customer data
 const getDefaultCustomerData = (): CustomerData => ({
-  merchant_customer_id: "shopccl_customertest_001_cl",
+  merchant_customer_id: "shopccl_customertest_001",
+  merchant_customer_created_at: "2025-11-26T06:00:00-05:00",
   first_name: "Test",
   last_name: "User",
   email: "carlos.medina@y.uno", // For MP test_user_1631154188@testuser.com
-  /*country: "CO",
+  country: "CO",
   gender: "M",
   date_of_birth: "2000-12-14",
   nationality: "CO",
   document: {
     document_type: "CC",
     document_number: "1234567890",
-  },*/
+  },
   phone: {
-    number: "969929157",
-    country_code: "51",
-  }/*,
+    number: "60800081",
+    country_code: "507",
+  },
   billing_address: {
     address_line_1: "Cra 15 No 93-50",
     address_line_2: "Apt 301",
@@ -83,7 +85,7 @@ const getDefaultCustomerData = (): CustomerData => ({
     state: "Cundinamarca",
     city: "Bogotá",
     zip_code: "010101",
-  },*/
+  }
 });
 
 export const CustomerProvider = ({ children }: { children: ReactNode }) => {

@@ -130,6 +130,22 @@ export const countries: Country[] = [
     }
   },
   { 
+    isoCode: 'UY', 
+    name: "Uruguay", 
+    currency: "UYU", 
+    currencySymbol: "$U",
+    phoneCountryCode: "598",
+    documentTypes: ["CI", "PP"],
+    defaultDocumentType: "CI",
+    sampleDocumentNumber: "12345678",
+    defaultAddress: {
+      state: "Montevideo",
+      city: "Montevideo",
+      zipCode: "11000",
+      sampleAddress: "Av. 18 de Julio 1234"
+    }
+  },
+  { 
     isoCode: 'AQ', 
     name: "Antártida", 
     currency: "USD", 

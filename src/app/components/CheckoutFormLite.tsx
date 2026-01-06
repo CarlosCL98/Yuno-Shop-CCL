@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useCart } from "../context/CartContext";
 import { usePayments } from "../context/PaymentContext";
 import { useCurrency } from "../context/CurrencyContext";
@@ -27,12 +27,22 @@ export default function CheckoutFormLite() {
   const [VAULTED_TOKEN, setVAULTED_TOKEN] = useState<string>("");
   const [customAmount, setCustomAmount] = useState<string>("");
   const [useCustomAmount, setUseCustomAmount] = useState(false);
+  const [useExternalPayButton, setUseExternalPayButton] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsError, setShowTermsError] = useState(false);
+  const [formMounted, setFormMounted] = useState(false);
+  const termsAcceptedRef = useRef(false);
   const router = useRouter();
 
   // Calculate the final amount to use (custom or cart total)
   const finalAmount = useCustomAmount && customAmount ? parseFloat(customAmount) : total;
 
   const [sameAsShipping, setSameAsShipping] = useState(false);
+
+  // Keep ref in sync with terms accepted state
+  useEffect(() => {
+    termsAcceptedRef.current = termsAccepted;
+  }, [termsAccepted]);
 
   // Sync customer data when currency context country changes (e.g., from navbar)
   useEffect(() => {
@@ -103,7 +113,9 @@ export default function CheckoutFormLite() {
       // Create the checkout session
       // If using custom amount, it's already in the selected currency, so don't convert
       // If using cart total, convert from USD to selected currency
-      const convertedTotal = useCustomAmount ? finalAmount : convertPrice(finalAmount, "USD");
+      // Round to 2 decimal places to avoid floating-point precision issues
+      const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(finalAmount, "USD")) * 100) / 100;
+      console.log("Checkout session amount:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
       const response = await fetch("/api/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,9 +155,12 @@ export default function CheckoutFormLite() {
     setPAYMENT_METHOD_TYPE(paymentMethod.type);
     setVAULTED_TOKEN(paymentMethod.vaulted_token || "");
     setShowPaymentSection(true);
+    setFormMounted(false); // Reset form mounted state
+    setTermsAccepted(false); // Reset terms for new payment method
+    setShowTermsError(false);
     
-    // Pass the payment method directly to avoid stale state
-    handleStartCheckout(paymentMethod);
+    // Initialize checkout session but don't mount the form yet
+    handleInitCheckout(paymentMethod);
   };
 
   // Helper function to create unique identifier for payment methods
@@ -155,6 +170,146 @@ export default function CheckoutFormLite() {
 
   const getSelectedPaymentMethodId = () => {
     return selectedPaymentMethod ? getPaymentMethodId(selectedPaymentMethod) : null;
+  };
+
+  // Handler to mount the payment form after terms are accepted
+  const handleMountPaymentForm = () => {
+    console.log("Mount payment form clicked...");
+    
+    // Check if terms are accepted
+    if (!termsAccepted) {
+      setShowTermsError(true);
+      return;
+    }
+    
+    setShowTermsError(false);
+    console.log("Terms accepted - mounting payment form");
+    
+    // Mount the form
+    if (selectedPaymentMethod) {
+      yunoInstance?.mountCheckoutLite({
+        paymentMethodType: selectedPaymentMethod.type,
+        vaultedToken: selectedPaymentMethod.vaulted_token || undefined,
+      });
+      setFormMounted(true);
+    }
+  };
+
+  // External pay button handler - calls startPayment() on the Yuno SDK
+  const handleExternalPay = () => {
+    console.log("External Pay button clicked - calling startPayment()...");
+    
+    // Check if terms are accepted
+    if (!termsAccepted) {
+      setShowTermsError(true);
+      alert("Please accept the terms and conditions to continue.");
+      return;
+    }
+    
+    setShowTermsError(false);
+    console.log("Terms accepted - proceeding with payment");
+    console.log("Selected payment method:", selectedPaymentMethod?.type);
+    
+    // For all payment methods, use startPayment
+    yunoInstance?.startPayment();
+  };
+
+  // Initialize checkout session without mounting the form
+  const handleInitCheckout = (paymentMethod?: PaymentMethod) => {
+    const currentPaymentMethod = paymentMethod || selectedPaymentMethod;
+    if (!currentPaymentMethod) return;
+
+    console.log("Initializing checkout session for:", currentPaymentMethod.type);
+
+    // Only initialize the checkout session, don't mount yet
+    yunoInstance?.startCheckout({
+      checkoutSession: localStorage.getItem("yuno_checkout_session") ?? "",
+      countryCode: customerData.country || '',
+      elementSelector: "#form-element",
+      language: 'en',
+      showLoading: true,
+      issuersFormEnable: true,
+      showPaymentStatus: true,
+      showPayButton: !useExternalPayButton,
+      card: {
+        isCreditCardProcessingOnly: true,
+        type: "extends",
+        styles: '',
+        cardSaveEnable: true,
+        texts: {}
+      },
+      onLoading: (args) => {
+        console.log(args);
+      },
+      yunoPaymentMethodSelected: (e) => {
+        console.log('Payment method selected', e);
+      },
+      yunoPaymentResult: (status) => {
+        console.log('Payment result:', status);
+        if (status === "SUCCEEDED") {
+          router.push("/payment-result?status=success");
+        }
+      },
+      yunoError: (message, data) => {
+        console.error('Payment error:', message, data);
+      },
+      async yunoCreatePayment(oneTimeToken) {
+        // Check if terms are accepted before creating payment
+        if (!termsAcceptedRef.current) {
+          console.error("Terms and conditions not accepted");
+          setShowTermsError(true);
+          alert("You must accept the terms and conditions to complete the payment.");
+          throw new Error("Terms and conditions not accepted");
+        }
+        
+        try {
+          console.log("Terms accepted - creating payment...");
+          setShowTermsError(false);
+          
+          const customerId = localStorage.getItem("yuno_customer_id");
+          const checkoutSessionId = localStorage.getItem("yuno_checkout_session");
+          const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(total, "USD")) * 100) / 100;
+          console.log("Payment amount being sent:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
+          const paymentResponse = await fetch("/api/create-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              oneTimeToken, 
+              checkoutSessionId, 
+              customerId, 
+              total: convertedTotal, 
+              currency, 
+              country: customerData.country,
+              merchant_customer_created_at: customerData.merchant_customer_created_at
+            }),
+          });
+
+          const payment = await paymentResponse.json();
+          console.log("Yuno answer payment:", payment);
+          const paymentData = {
+            payment_id: payment.id,
+            status: payment.sub_status,
+            amount: payment.amount.value,
+            currency: payment.amount.currency || currency,
+            created_at: payment.created_at,
+          };
+          addPayment(paymentData);
+          const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: true });
+          console.log("Response action:", responseAction);
+        } catch (error) {
+          console.error("Error sending data:", error);
+        }
+      },
+      renderMode: {
+        type: 'element',
+        elementSelector: {
+          apmForm: "#form-element",
+          actionForm: "#action-form-element"
+        }
+      },
+    });
+
+    console.log("Checkout session initialized - form not mounted yet");
   };
 
   // Modified to accept paymentMethod parameter
@@ -173,6 +328,8 @@ export default function CheckoutFormLite() {
       showLoading: true,
       issuersFormEnable: true,
       showPaymentStatus: true,
+      // Hide Yuno's internal pay button when using external pay button
+      showPayButton: !useExternalPayButton,
       card: {
         isCreditCardProcessingOnly: true,
         type: "extends",
@@ -212,13 +369,26 @@ export default function CheckoutFormLite() {
         * The createPayment function calls the backend to create a payment in Yuno.
         * It uses the following endpoint https://docs.y.uno/reference/create-payment
         */
+        
+        // Check if terms are accepted before creating payment
+        if (!termsAcceptedRef.current) {
+          console.error("Terms and conditions not accepted");
+          setShowTermsError(true);
+          alert("You must accept the terms and conditions to complete the payment.");
+          throw new Error("Terms and conditions not accepted");
+        }
+        
         try {
+          console.log("Terms accepted - creating payment...");
+          setShowTermsError(false);
+          
           // Create the payment
           const customerId = localStorage.getItem("yuno_customer_id");
           const checkoutSessionId = localStorage.getItem("yuno_checkout_session");
-          // If using custom amount, it's already in the selected currency, so don't convert
-          // If using cart total, convert from USD to selected currency
-          const convertedTotal = useCustomAmount ? finalAmount : convertPrice(total, "USD");
+          // Use the same converted total that was used for the checkout session
+          // Round to 2 decimal places to avoid floating-point precision issues
+          const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(total, "USD")) * 100) / 100;
+          console.log("Payment amount being sent:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -228,7 +398,8 @@ export default function CheckoutFormLite() {
               customerId, 
               total: convertedTotal, 
               currency, 
-              country: customerData.country
+              country: customerData.country,
+              merchant_customer_created_at: customerData.merchant_customer_created_at
             }),
           });
 
@@ -344,6 +515,24 @@ export default function CheckoutFormLite() {
                 Test Amount: {currency} {parseFloat(customAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             )}
+          </div>
+
+          {/* External Pay Button Option */}
+          <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <label className="flex items-center gap-2 text-gray-700 font-medium cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useExternalPayButton}
+                onChange={(e) => setUseExternalPayButton(e.target.checked)}
+                className="w-4 h-4 accent-purple-600"
+              />
+              🎮 Use external Pay button
+            </label>
+            <p className="text-sm text-gray-500 mt-1 ml-6">
+              {useExternalPayButton 
+                ? "Yuno's internal Pay button will be hidden. Use your own button to trigger payment." 
+                : "Yuno's internal Pay button will be shown in the form."}
+            </p>
           </div>
         </section>
       )}
@@ -607,8 +796,103 @@ export default function CheckoutFormLite() {
               {/* Payment Form Container */}
               <div className="lg:col-span-2 order-2 lg:order-1">
                 <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div id="form-element" className="min-h-[200px]"></div>
-                  <div id="action-form-element" className="mt-4"></div>
+                  {/* Form elements - always in DOM but hidden when not mounted */}
+                  <div className={formMounted ? '' : 'hidden'}>
+                    <div id="form-element"></div>
+                    <div id="action-form-element" className="mt-4"></div>
+                  </div>
+                  
+                  {/* Show terms gate if form not mounted yet */}
+                  {!formMounted ? (
+                    <div className="min-h-[300px] flex flex-col items-center justify-center p-8">
+                      <div className="max-w-md w-full space-y-6">
+                        <div className="text-center">
+                          <div className="w-20 h-20 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            Ready to pay with {selectedPaymentMethod?.name}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Please accept our terms and conditions to continue
+                          </p>
+                        </div>
+
+                        {/* Terms Checkbox */}
+                        <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-lg transition-colors ${
+                          showTermsError ? 'bg-red-50 border-2 border-red-300' : 'bg-white border-2 border-gray-200 hover:border-blue-300'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={termsAccepted}
+                            onChange={(e) => {
+                              setTermsAccepted(e.target.checked);
+                              if (e.target.checked) setShowTermsError(false);
+                            }}
+                            className="w-5 h-5 mt-0.5 accent-blue-600 flex-shrink-0"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm text-gray-700">
+                              I accept the{' '}
+                              <a href="#" className="text-blue-600 hover:text-blue-800 underline font-medium">
+                                terms and conditions
+                              </a>
+                              {' '}and{' '}
+                              <a href="#" className="text-blue-600 hover:text-blue-800 underline font-medium">
+                                privacy policy
+                              </a>
+                            </span>
+                            {showTermsError && (
+                              <p className="text-xs text-red-600 mt-1 font-medium">
+                                ⚠️ You must accept the terms and conditions to proceed
+                              </p>
+                            )}
+                          </div>
+                        </label>
+
+                        {/* Start Payment Button */}
+                        <button
+                          type="button"
+                          onClick={handleMountPaymentForm}
+                          disabled={!termsAccepted}
+                          className={`w-full px-6 py-4 rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg flex items-center justify-center space-x-3 ${
+                            termsAccepted
+                              ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white transform hover:scale-[1.02] cursor-pointer'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span>{termsAccepted ? 'Start Payment' : 'Accept Terms to Continue'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Form is mounted - show external pay button if enabled */}
+                      {/* External Pay Button - shown when useExternalPayButton is enabled */}
+                      {useExternalPayButton && (
+                        <div className="mt-6 pt-4 border-t border-gray-300">
+                          <button
+                            type="button"
+                            onClick={handleExternalPay}
+                            className="w-full px-8 py-4 rounded-lg font-semibold text-lg bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white transform hover:scale-[1.02] transition-all duration-200 shadow-lg flex items-center justify-center space-x-3"
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                            <span>Pay Now</span>
+                          </button>
+                          <p className="text-xs text-gray-500 text-center mt-2">
+                            External button controlling the payment flow
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
               

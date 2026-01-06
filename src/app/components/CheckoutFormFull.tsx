@@ -23,6 +23,7 @@ export default function CheckoutFormFull() {
   const [sameAsShipping, setSameAsShipping] = useState(false);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [useCustomAmount, setUseCustomAmount] = useState(false);
+  const [useGuestCheckout, setUseGuestCheckout] = useState(false);
   const router = useRouter();
 
   // Calculate the final amount to use (custom or cart total)
@@ -84,28 +85,39 @@ export default function CheckoutFormFull() {
     e.preventDefault();
     setShowPaymentSection(true);
     try {
-      // Create the customer
-      const customerResponse = await fetch("/api/create-customer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(customerData),
-      });
+      let customerId = null;
+      
+      // Only create customer if NOT using guest checkout
+      if (!useGuestCheckout) {
+        const customerResponse = await fetch("/api/create-customer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(customerData),
+        });
 
-      const customer = await customerResponse.json();
-      localStorage.setItem("yuno_customer_id", customer.id);
-      console.log("Yuno answer customer:", customer);
+        const customer = await customerResponse.json();
+        customerId = customer.id;
+        localStorage.setItem("yuno_customer_id", customer.id);
+        console.log("Yuno answer customer:", customer);
+      } else {
+        // For guest checkout, clear any existing customer ID
+        localStorage.removeItem("yuno_customer_id");
+        console.log("Guest checkout - skipping customer creation");
+      }
 
       // Create the checkout session
       // If using custom amount, it's already in the selected currency, so don't convert
       // If using cart total, convert from USD to selected currency
-      const convertedTotal = useCustomAmount ? finalAmount : convertPrice(finalAmount, "USD");
+      // Round to 2 decimal places to avoid floating-point precision issues
+      const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(finalAmount, "USD")) * 100) / 100;
+      console.log("Checkout session amount:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
       const response = await fetch("/api/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customer_id: customer.id,
+          customer_id: customerId, // Will be null for guest checkout
           amount: convertedTotal,
-          country: customer.country,
+          country: customerData.country,
           currency: currency
         })
       });
@@ -135,7 +147,7 @@ export default function CheckoutFormFull() {
        * isCreditCardProcessingOnly: true | false | undefined
       */
       card: {
-        isCreditCardProcessingOnly: true,
+        isCreditCardProcessingOnly: false,
         type: "extends",
         styles: '',
         cardSaveEnable: true,
@@ -179,20 +191,41 @@ export default function CheckoutFormFull() {
           // Create the payment
           const customerId = localStorage.getItem("yuno_customer_id");
           const checkoutSessionId = localStorage.getItem("yuno_checkout_session");
-          // If using custom amount, it's already in the selected currency, so don't convert
-          // If using cart total, convert from USD to selected currency
-          const convertedTotal = useCustomAmount ? finalAmount : convertPrice(total, "USD");
+          // Use the same converted total that was used for the checkout session
+          // Round to 2 decimal places to avoid floating-point precision issues
+          const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(total, "USD")) * 100) / 100;
+          console.log("Payment amount being sent:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
+          
+          // Build request body - include full customer info for guest checkout
+          const paymentBody: any = { 
+            oneTimeToken, 
+            checkoutSessionId, 
+            total: convertedTotal, 
+            currency, 
+            country: customerData.country || '',
+            merchant_customer_created_at: customerData.merchant_customer_created_at,
+            isGuestCheckout: useGuestCheckout
+          };
+
+          // If guest checkout, send full customer_payer info instead of customerId
+          if (useGuestCheckout) {
+            paymentBody.customerPayerInfo = {
+              first_name: customerData.first_name,
+              last_name: customerData.last_name,
+              email: customerData.email,
+              document: customerData.document,
+              phone: customerData.phone,
+              billing_address: customerData.billing_address,
+              shipping_address: customerData.shipping_address,
+            };
+          } else {
+            paymentBody.customerId = customerId;
+          }
+
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              oneTimeToken, 
-              checkoutSessionId, 
-              customerId, 
-              total: convertedTotal, 
-              currency, 
-              country: customerData.country || ''
-            }),
+            body: JSON.stringify(paymentBody),
           });
 
           const payment = await paymentResponse.json();
@@ -254,7 +287,9 @@ export default function CheckoutFormFull() {
   useEffect(() => {
     const initializeYuno = async () => {
 
-      const yuno = (await loadScript()) as Yuno;
+      const yuno = (await loadScript({
+        env:'prod' // Options: 'dev', 'staging', 'sandbox', 'prod'
+      })) as Yuno;
       const yunoInstance = await yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!) as YunoInstance;
       setYunoInstance(yunoInstance);
 
@@ -345,6 +380,25 @@ export default function CheckoutFormFull() {
       {/* Payer Information */}
       <section>
         <h2 className="text-2xl font-bold mb-4">👤 Payer Information</h2>
+        
+        {/* Guest Checkout Toggle */}
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <label className="flex items-center gap-2 text-gray-700 font-medium cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useGuestCheckout}
+              onChange={(e) => setUseGuestCheckout(e.target.checked)}
+              className="w-4 h-4 accent-blue-600"
+            />
+            🚀 Guest Checkout (no customer creation)
+          </label>
+          <p className="text-sm text-gray-500 mt-1 ml-6">
+            {useGuestCheckout 
+              ? "Customer info will be sent directly in the payment request" 
+              : "A customer will be created in Yuno before the payment"}
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField name="first_name" placeholder="First Name" value={customerData.first_name || ''} onChange={handleChange} />
           <InputField name="last_name" placeholder="Last Name" value={customerData.last_name || ''} onChange={handleChange} />

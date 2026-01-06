@@ -10,7 +10,7 @@ export async function POST(request: Request) {
             "account_id": process.env.ACCOUNT_CODE!,
             "country": params.country,
             "customer_id": params.customer_id,
-            "callback_url": "https://localhost:3000/profile",
+            //"callback_url": "https://localhost:3000/profile",
         }
 
         const response = await fetch(`${apiBaseUrl}/v1/customers/sessions`, {

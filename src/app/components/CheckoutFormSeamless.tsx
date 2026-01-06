@@ -98,7 +98,9 @@ export default function CheckoutFormSeamless() {
   };
 
   const createCheckoutSession = async (customerId: string) => {
-    const convertedTotal = useCustomAmount ? finalAmount : convertPrice(finalAmount, "USD");
+    // Round to 2 decimal places to avoid floating-point precision issues
+    const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(finalAmount, "USD")) * 100) / 100;
+    console.log("Checkout session amount:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
     const response = await fetch("/api/create-checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -239,7 +241,9 @@ export default function CheckoutFormSeamless() {
       },
       async yunoCreatePayment(oneTimeToken) {
         try {
-          const convertedTotal = useCustomAmount ? finalAmount : convertPrice(total, "USD");
+          // Round to 2 decimal places to avoid floating-point precision issues
+          const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(total, "USD")) * 100) / 100;
+          console.log("Payment amount being sent:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -24,6 +24,7 @@ const EXCHANGE_RATES: Record<string, number> = {
   BRL: 5.2,    // Brazilian Real
   MXN: 17,     // Mexican Peso
   CLP: 900,    // Chilean Peso
+  UYU: 42,     // Uruguayan Peso
 };
 
 export const CurrencyProvider = ({ children }: { children: ReactNode }) => {

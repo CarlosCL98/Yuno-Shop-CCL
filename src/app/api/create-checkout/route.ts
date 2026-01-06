@@ -15,16 +15,19 @@ export async function POST(request: Request) {
     console.log("- Account Code value:", process.env.ACCOUNT_CODE?.substring(0, 8) + "...");
     console.log("- Public Key prefix:", process.env.NEXT_PUBLIC_API_KEY?.substring(0, 10) + "...");
 
+    // Round the amount to 2 decimal places to avoid floating-point precision issues
+    const roundedAmount = Math.round(Number(params.amount) * 100) / 100;
+    
     const body = {
       "account_id": process.env.ACCOUNT_CODE!,
       "merchant_order_id": merchant_order_id,
       "payment_description": "Test Yuno Shop CCL",
       //"callback_url": "https://localhost:3000/profile",
       "country": params.country,
-      "customer_id": params.customer_id,
+      //"customer_id": params.customer_id,
       "amount": {
         "currency": params.currency || "PEN",
-        "value": params.amount
+        "value": roundedAmount
       },
       /*"installments": {
         "plan_id": "9d48bcd9-66ba-4194-969f-01db08a2e381"

@@ -12,7 +12,14 @@ export async function POST(request: Request) {
             "account_id": process.env.ACCOUNT_CODE!,
             "payment_method_type": params.payment_method_type,
             "country": params.country,
-            "workflow": "DIRECT"
+            "verify": {
+                "vault_on_success": true,
+                "currency": params.currency || "COP",
+                "store_credentials": {
+                    "reason": "CARD_ON_FILE",
+                    "usage": "FIRST"
+                }
+            }
         };
 
         // Add customer information if provided

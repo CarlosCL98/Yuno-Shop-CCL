@@ -73,7 +73,7 @@ export const countries: Country[] = [
     phoneCountryCode: "55",
     documentTypes: ["CPF", "RG", "PP"],
     defaultDocumentType: "CPF",
-    sampleDocumentNumber: "123.456.789-01",
+    sampleDocumentNumber: "12345678909",
     defaultAddress: {
       state: "São Paulo",
       city: "São Paulo",

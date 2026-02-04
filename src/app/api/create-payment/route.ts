@@ -46,7 +46,7 @@ export async function POST(request: Request) {
             "country": params.country || "CO",
             "amount": {
                 "currency": params.currency || "COP",
-                "value": params.total
+                "value": params.total || 0
             },
             "checkout": {
                 "session": params.checkoutSessionId
@@ -54,10 +54,15 @@ export async function POST(request: Request) {
             "customer_payer": customer_payer,
             "payment_method": {
                 "token": params.oneTimeToken,
+                "vault_on_success": false,
                 "detail": {
                     "card": {
                         "verify": false,
-                        "capture": true
+                        "capture": true,
+                        /*"store_credentials": {
+                            "reason": "CARD_ON_FILE",
+                            "usage": "FIRST"
+                        }*/
                     }
                 }
             },
@@ -69,15 +74,15 @@ export async function POST(request: Request) {
                 {
                     "key": "establishment",
                     "value": "TERPELPALMITAS"
-                },*/
+                }
                 {
                     "key": "with3DS",
-                    "value": "yes"
-                }/*,
+                    "value": "no"
+                },*/
                 {
                     "key": "processor",
-                    "value": "GETNET"
-                },
+                    "value": "WOMPI"
+                }/*,
                 {
                     "key": "fraudValidation",
                     "value": "no"

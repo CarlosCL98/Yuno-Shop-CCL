@@ -24,6 +24,7 @@ export default function CheckoutFormFull() {
   const [customAmount, setCustomAmount] = useState<string>("");
   const [useCustomAmount, setUseCustomAmount] = useState(false);
   const [useGuestCheckout, setUseGuestCheckout] = useState(false);
+  const [showCustomPayButton, setShowCustomPayButton] = useState(false); // Toggle to show custom pay button
   const router = useRouter();
 
   // Calculate the final amount to use (custom or cart total)
@@ -141,7 +142,7 @@ export default function CheckoutFormFull() {
       showLoading: true,
       issuersFormEnable: true,
       showPaymentStatus: true,
-      showPayButton:true,
+      showPayButton: !showCustomPayButton, // When false, we show our custom pay button instead
       /**
        * Set isCreditCardProcessingOnly as true to process all card transactions are credit
        * isCreditCardProcessingOnly: true | false | undefined
@@ -260,7 +261,7 @@ export default function CheckoutFormFull() {
          * By default the system uses 'modal'
          * It is optional
          */
-        type: 'modal',
+        type: 'element',
         /**
          * Element where the form will be rendered.
          * It is optional
@@ -282,6 +283,17 @@ export default function CheckoutFormFull() {
   const handleStartPayment = (e: any) => {
     e.preventDefault()
     yunoInstance?.startPayment();
+  };
+
+  // Handler for custom pay button - submits the one-time token form
+  const handleSubmitOneTimeToken = async (e: any) => {
+    e.preventDefault();
+    try {
+      console.log("Submitting one-time token form...");
+      await yunoInstance?.submitOneTimeTokenForm();
+    } catch (error) {
+      console.error("Error submitting one-time token form:", error);
+    }
   };
 
   useEffect(() => {
@@ -505,6 +517,19 @@ export default function CheckoutFormFull() {
           <div id="yuno-checkout" className="w-full" />
           <div id="form-element" className="w-full" />
           <div id="action-form-element" className="w-full" />
+          
+          {/* Custom Pay Button - shown when showPayButton is false in startCheckout */}
+          {showCustomPayButton && (
+            <button
+              id="custom-pay-button"
+              type="button"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-10 py-3 rounded-full mt-4 transition font-semibold w-full"
+              onClick={handleSubmitOneTimeToken}
+            >
+              Complete Payment
+            </button>
+          )}
+          
           <button
             id="button-pay"
             type="button"

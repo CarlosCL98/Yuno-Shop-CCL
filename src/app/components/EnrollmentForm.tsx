@@ -13,7 +13,7 @@ import { useCustomer } from "../context/CustomerContext";
 
 export default function EnrollmentForm() {
     const [yunoInstance, setYunoInstance] = useState<YunoInstance | null>(null);
-    const { setCountry, country: currencyCountry } = useCurrency();
+    const { setCountry, country: currencyCountry, currency } = useCurrency();
     const { customerData, updateCustomerField, updateNestedField, updateCountryData } = useCustomer();
     const [showPaymentMethods, setShowPaymentMethods] = useState(false);
     const [paymentMethods, setPaymentMethods] = useState<PaymentMethodEnrollable[]>([]);
@@ -140,6 +140,7 @@ export default function EnrollmentForm() {
                     customer_session: localStorage.getItem("yuno_customer_session"),
                     payment_method_type: currentPaymentMethod.type,
                     country: customerData.country || '',
+                    currency: currency,
                     customer_data: customerData
                 }),
             });

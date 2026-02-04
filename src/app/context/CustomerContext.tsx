@@ -53,8 +53,8 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 
 // Default customer data
 const getDefaultCustomerData = (): CustomerData => ({
-  merchant_customer_id: "shopccl_customertest_001",
-  merchant_customer_created_at: "2025-11-26T06:00:00-05:00",
+  merchant_customer_id: "shopccl_customertest_001_co_date",
+  merchant_customer_created_at: "2026-02-03T14:50:58Z",
   first_name: "Test",
   last_name: "User",
   email: "carlos.medina@y.uno", // For MP test_user_1631154188@testuser.com
@@ -67,8 +67,8 @@ const getDefaultCustomerData = (): CustomerData => ({
     document_number: "1234567890",
   },
   phone: {
-    number: "60800081",
-    country_code: "507",
+    number: "3991111111",
+    country_code: "57",
   },
   billing_address: {
     address_line_1: "Cra 15 No 93-50",

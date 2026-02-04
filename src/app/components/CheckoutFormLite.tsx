@@ -31,6 +31,7 @@ export default function CheckoutFormLite() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTermsError, setShowTermsError] = useState(false);
   const [formMounted, setFormMounted] = useState(false);
+  const [externalButtonMounted, setExternalButtonMounted] = useState(false);
   const termsAcceptedRef = useRef(false);
   const router = useRouter();
 
@@ -122,7 +123,7 @@ export default function CheckoutFormLite() {
         body: JSON.stringify({
           customer_id: customer.id,
           amount: convertedTotal,
-          country: customer.country,
+          country: customerData.country,  // Use local customerData instead of API response
           currency: currency
         })
       });
@@ -156,6 +157,7 @@ export default function CheckoutFormLite() {
     setVAULTED_TOKEN(paymentMethod.vaulted_token || "");
     setShowPaymentSection(true);
     setFormMounted(false); // Reset form mounted state
+    setExternalButtonMounted(false); // Reset external button state
     setTermsAccepted(false); // Reset terms for new payment method
     setShowTermsError(false);
     
@@ -187,11 +189,23 @@ export default function CheckoutFormLite() {
     
     // Mount the form
     if (selectedPaymentMethod) {
-      yunoInstance?.mountCheckoutLite({
-        paymentMethodType: selectedPaymentMethod.type,
-        vaultedToken: selectedPaymentMethod.vaulted_token || undefined,
-      });
-      setFormMounted(true);
+      // Check if this is Google Pay - use mountExternalButtons
+      if (selectedPaymentMethod.type === 'GOOGLE_PAY') {
+        console.log("Mounting Google Pay external button...");
+        yunoInstance?.mountExternalButtons([{
+          paymentMethodType: 'GOOGLE_PAY',
+          elementSelector: '#google-pay-button',
+        }]);
+        setExternalButtonMounted(true);
+        setFormMounted(true);
+      } else {
+        // For other payment methods, use regular mountCheckoutLite
+        yunoInstance?.mountCheckoutLite({
+          paymentMethodType: selectedPaymentMethod.type,
+          vaultedToken: selectedPaymentMethod.vaulted_token || undefined,
+        });
+        setFormMounted(true);
+      }
     }
   };
 
@@ -796,8 +810,15 @@ export default function CheckoutFormLite() {
               {/* Payment Form Container */}
               <div className="lg:col-span-2 order-2 lg:order-1">
                 <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  {/* Google Pay external button - show when Google Pay is selected and mounted */}
+                  {selectedPaymentMethod?.type === 'GOOGLE_PAY' && externalButtonMounted && (
+                    <div className="mb-6">
+                      <div id="google-pay-button" className="min-h-[48px]"></div>
+                    </div>
+                  )}
+                  
                   {/* Form elements - always in DOM but hidden when not mounted */}
-                  <div className={formMounted ? '' : 'hidden'}>
+                  <div className={formMounted && selectedPaymentMethod?.type !== 'GOOGLE_PAY' ? '' : 'hidden'}>
                     <div id="form-element"></div>
                     <div id="action-form-element" className="mt-4"></div>
                   </div>
@@ -816,7 +837,9 @@ export default function CheckoutFormLite() {
                             Ready to pay with {selectedPaymentMethod?.name}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            Please accept our terms and conditions to continue
+                            {selectedPaymentMethod?.type === 'GOOGLE_PAY' 
+                              ? 'Accept terms to see the Google Pay button'
+                              : 'Please accept our terms and conditions to continue'}
                           </p>
                         </div>
 
@@ -866,7 +889,11 @@ export default function CheckoutFormLite() {
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
-                          <span>{termsAccepted ? 'Start Payment' : 'Accept Terms to Continue'}</span>
+                          <span>
+                            {termsAccepted 
+                              ? (selectedPaymentMethod?.type === 'GOOGLE_PAY' ? 'Show Google Pay Button' : 'Start Payment')
+                              : 'Accept Terms to Continue'}
+                          </span>
                         </button>
                       </div>
                     </div>

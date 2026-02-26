@@ -5,8 +5,6 @@ import { useCart } from "../context/CartContext";
 import { usePayments } from "../context/PaymentContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCustomer } from "../context/CustomerContext";
-import { loadScript } from '@yuno-payments/sdk-web';
-import { Yuno, YunoInstance } from '@yuno-payments/sdk-web-types';
 import { useRouter } from "next/navigation";
 import InputField from "./InputField";
 import SelectField from "./SelectField";
@@ -123,7 +121,7 @@ export default function CheckoutFormLite() {
         body: JSON.stringify({
           customer_id: customer.id,
           amount: convertedTotal,
-          country: customerData.country,  // Use local customerData instead of API response
+          country: customer.country,
           currency: currency
         })
       });
@@ -252,22 +250,22 @@ export default function CheckoutFormLite() {
         cardSaveEnable: true,
         texts: {}
       },
-      onLoading: (args) => {
+      onLoading: (args: any) => {
         console.log(args);
       },
-      yunoPaymentMethodSelected: (e) => {
+      yunoPaymentMethodSelected: (e: any) => {
         console.log('Payment method selected', e);
       },
-      yunoPaymentResult: (status) => {
+      yunoPaymentResult: (status: any) => {
         console.log('Payment result:', status);
         if (status === "SUCCEEDED") {
           router.push("/payment-result?status=success");
         }
       },
-      yunoError: (message, data) => {
+      yunoError: (message: any, data: any) => {
         console.error('Payment error:', message, data);
       },
-      async yunoCreatePayment(oneTimeToken) {
+      async yunoCreatePayment(oneTimeToken: any) {
         // Check if terms are accepted before creating payment
         if (!termsAcceptedRef.current) {
           console.error("Terms and conditions not accepted");
@@ -351,20 +349,20 @@ export default function CheckoutFormLite() {
         cardSaveEnable: true,
         texts: {}
       },
-      onLoading: (args) => {
+      onLoading: (args: any) => {
         console.log(args);
       },
       /**
        * Notifies when a payment method is selected
        */
-      yunoPaymentMethodSelected: (e) => {
+      yunoPaymentMethodSelected: (e: any) => {
         console.log('Payment method selected', e);
       },
       /**
        * Returns the payment result after continuePayment
        * @param {string} status - The payment status
        */
-      yunoPaymentResult: (status) => {
+      yunoPaymentResult: (status: any) => {
         console.log('Payment result:', status);
         if (status === "SUCCEEDED") {
           router.push("/payment-result?status=success");
@@ -375,10 +373,10 @@ export default function CheckoutFormLite() {
        * @param {string} message - Error message
        * @param {any} data - Additional error data
        */
-      yunoError: (message, data) => {
+      yunoError: (message: any, data: any) => {
         console.error('Payment error:', message, data);
       },
-      async yunoCreatePayment(oneTimeToken) {
+      async yunoCreatePayment(oneTimeToken: any) {
         /**
         * The createPayment function calls the backend to create a payment in Yuno.
         * It uses the following endpoint https://docs.y.uno/reference/create-payment
@@ -462,9 +460,7 @@ export default function CheckoutFormLite() {
 
   useEffect(() => {
     const initializeYuno = async () => {
-
-      const yuno = (await loadScript()) as Yuno;
-      const yunoInstance = await yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!) as YunoInstance;
+      const yunoInstance = await Yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!);
       setYunoInstance(yunoInstance);
 
       if (!yunoInstance) return;

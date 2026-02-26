@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Payment method ID is required" }, { status: 400 });
     }
 
-    const idempotency_key = generateUniqueId("shopccl_unenroll");
+    const idempotency_key = generateUniqueId("shopccl-unenroll");
     const apiBaseUrl = getYunoApiBaseUrl(process.env.NEXT_PUBLIC_API_KEY!);
 
     const response = await fetch(`${apiBaseUrl}/v1/customers/payment-methods/${payment_method_id}/unenroll`, {

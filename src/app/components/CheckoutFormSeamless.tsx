@@ -5,8 +5,6 @@ import { useCart } from "../context/CartContext";
 import { usePayments } from "../context/PaymentContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCustomer } from "../context/CustomerContext";
-import { loadScript } from '@yuno-payments/sdk-web';
-import { Yuno, YunoInstance } from '@yuno-payments/sdk-web-types';
 import { useRouter } from "next/navigation";
 import InputField from "./InputField";
 import SelectField from "./SelectField";
@@ -48,8 +46,7 @@ export default function CheckoutFormSeamless() {
   // Initialize Yuno SDK
   useEffect(() => {
     const initializeYuno = async () => {
-      const yuno = (await loadScript()) as Yuno;
-      const yunoInstance = await yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!) as YunoInstance;
+      const yunoInstance = await Yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!);
       setYunoInstance(yunoInstance);
       if (yunoInstance) console.log("Yuno SDK initialized!");
     };
@@ -228,18 +225,18 @@ export default function CheckoutFormSeamless() {
         type: "extends",
         cardSaveEnable: true,
       },
-      onLoading: (args) => console.log(args),
-      yunoPaymentMethodSelected: (e) => console.log('Payment method selected', e),
-      yunoPaymentResult: (status) => {
+      onLoading: (args: any) => console.log(args),
+      yunoPaymentMethodSelected: (e: any) => console.log('Payment method selected', e),
+      yunoPaymentResult: (status: any) => {
         console.log('Payment result:', status);
         if (status === "SUCCEEDED") {
           router.push("/payment-result?status=success");
         }
       },
-      yunoError: (message, data) => {
+      yunoError: (message: any, data: any) => {
         console.error('Payment error:', message, data);
       },
-      async yunoCreatePayment(oneTimeToken) {
+      async yunoCreatePayment(oneTimeToken: any) {
         try {
           // Round to 2 decimal places to avoid floating-point precision issues
           const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(total, "USD")) * 100) / 100;

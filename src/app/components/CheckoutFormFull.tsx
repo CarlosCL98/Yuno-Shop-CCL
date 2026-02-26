@@ -5,8 +5,6 @@ import { useCart } from "../context/CartContext";
 import { usePayments } from "../context/PaymentContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useCustomer } from "../context/CustomerContext";
-import { loadScript } from '@yuno-payments/sdk-web';
-import { Yuno, YunoInstance } from '@yuno-payments/sdk-web-types';
 import { useRouter } from "next/navigation";
 import InputField from "./InputField";
 import SelectField from "./SelectField";
@@ -154,20 +152,20 @@ export default function CheckoutFormFull() {
         cardSaveEnable: true,
         texts: {}
       },
-      onLoading: (args) => {
+      onLoading: (args: any) => {
         console.log(args);
       },
       /**
        * Notifies when a payment method is selected
        */
-      yunoPaymentMethodSelected: (e) => {
+      yunoPaymentMethodSelected: (e: any) => {
         console.log('Payment method selected', e);
       },
       /**
        * Returns the payment result after continuePayment
        * @param {string} status - The payment status
        */
-      yunoPaymentResult: (status) => {
+      yunoPaymentResult: (status: any) => {
         console.log('Payment result:', status);
         if (status === "SUCCEEDED") {
           router.push("/payment-result?status=success");
@@ -178,10 +176,10 @@ export default function CheckoutFormFull() {
        * @param {string} message - Error message
        * @param {any} data - Additional error data
        */
-      yunoError: (message, data) => {
+      yunoError: (message: any, data: any) => {
         console.error('Payment error:', message, data);
       },
-      async yunoCreatePayment(oneTimeToken,tokenWithInformation) {
+      async yunoCreatePayment(oneTimeToken: any, tokenWithInformation: any) {
         console.log("Token with information:", tokenWithInformation);
         console.log("One time token:", oneTimeToken); 
         /**
@@ -298,11 +296,7 @@ export default function CheckoutFormFull() {
 
   useEffect(() => {
     const initializeYuno = async () => {
-
-      const yuno = (await loadScript({
-        env:'prod' // Options: 'dev', 'staging', 'sandbox', 'prod'
-      })) as Yuno;
-      const yunoInstance = await yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!) as YunoInstance;
+      const yunoInstance = await Yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!);
       setYunoInstance(yunoInstance);
 
       if (!yunoInstance) return;

@@ -9,6 +9,7 @@ export interface CustomerData {
   first_name?: string;
   last_name?: string;
   email?: string;
+  ip_address?: string;
   country?: string;
   gender?: string;
   date_of_birth?: string;
@@ -57,7 +58,7 @@ const getDefaultCustomerData = (): CustomerData => ({
   merchant_customer_created_at: "2026-02-03T14:50:58Z",
   first_name: "Test",
   last_name: "User",
-  email: "carlos.medina@y.uno", // For MP test_user_1631154188@testuser.com
+  email: "test_user_1631154188@testuser.com", // For MP test_user_1631154188@testuser.com
   country: "CO",
   gender: "M",
   date_of_birth: "2000-12-14",
@@ -87,6 +88,17 @@ const getDefaultCustomerData = (): CustomerData => ({
     zip_code: "010101",
   }
 });
+
+/*const getDefaultCustomerData = (): CustomerData => ({
+  merchant_customer_id: "2063",
+  first_name: "Pablo",
+  last_name: "Perez",
+  email: "harby@mac.com",
+  ip_address: "190.28.0.105",
+  billing_address: {
+    "country": "CO"
+  },
+});*/
 
 export const CustomerProvider = ({ children }: { children: ReactNode }) => {
   const [customerData, setCustomerData] = useState<CustomerData>(getDefaultCustomerData());

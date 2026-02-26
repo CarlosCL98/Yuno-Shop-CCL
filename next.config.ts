@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   },
   // Reduce memory usage and optimize imports
   experimental: {
-    optimizePackageImports: ['@yuno-payments/sdk-web', '@supabase/supabase-js'],
+    optimizePackageImports: ['@supabase/supabase-js'],
   },
 };
 

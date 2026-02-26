@@ -11,7 +11,7 @@ export function generateUniqueId(prefix: string = "id"): string {
         String(now.getMilliseconds()).padStart(3, "0"),
     ].join("");
 
-    return `${prefix}_${formattedDate}`;
+    return `${prefix}.${formattedDate}`;
 }
 
 /**

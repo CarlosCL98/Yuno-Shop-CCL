@@ -4,7 +4,7 @@ import { generateUniqueId, getYunoApiBaseUrl } from "../../lib/utils";
 export async function POST(request: Request) {
     try {
         const params = await request.json();
-        const idempotency_key = generateUniqueId("shopccl_enrollment");
+        const idempotency_key = generateUniqueId("shopccl-enrollment");
         const apiBaseUrl = getYunoApiBaseUrl(process.env.NEXT_PUBLIC_API_KEY!);
 
         // Build the enrollment request body with customer information

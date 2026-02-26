@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     try {
         const params = await request.json();
 
-        const merchant_order_id = generateUniqueId("shopccl_payment");
+        const merchant_order_id = generateUniqueId("shopccl-payment");
         const apiBaseUrl = getYunoApiBaseUrl(process.env.NEXT_PUBLIC_API_KEY!);
 
         // Build customer_payer object
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         const body = {
             "account_id": process.env.ACCOUNT_CODE!,
             "merchant_order_id": merchant_order_id,
-            "description": "Test Yuno Shop CCL",
+            "description": "3DS Challenge",
             "callback_url": "https://yuno-shop-ccl.vercel.app/profile",
             "country": params.country || "CO",
             "amount": {
@@ -59,34 +59,82 @@ export async function POST(request: Request) {
                     "card": {
                         "verify": false,
                         "capture": true,
-                        /*"store_credentials": {
+                        "store_credentials": {
                             "reason": "CARD_ON_FILE",
                             "usage": "FIRST"
-                        }*/
+                        }
                     }
                 }
             },
-            "metadata": [
-                /*{
-                    "key": "sales_channel",
-                    "value": "PortalDuringBooking"
+            "additional_data": {
+                "airline": {
+                    "legs": [
+                        {//SCL -> AEP
+                            "arrival_airport": "AEP",
+                            "arrival_airport_country": "AR",
+                            "arrival_airport_city": "BUE",
+                            "arrival_datetime": "2026-06-13T01:45:00",
+                            "arrival_airport_timezone": "-05:00",
+                            "base_fare": 0,
+                            "base_fare_currency": null,
+                            "carrier_code": "JA",
+                            "departure_airport": "SCL",
+                            "departure_airport_country": "CL",
+                            "departure_airport_city": "SCL",
+                            "departure_airport_timezone": "-05:00",
+                            "departure_datetime": "2026-06-13T01:45:00",
+                            "fare_basis_code": null,
+                            "fare_class_code": null,
+                            "flight_number": "731",
+                            "stopover_code": "X",
+                            "route_order": 0,
+                            "order": 0
+                        }
+                    ],
+                    "passengers": [
+                        {
+                            "country": null,
+                            "date_of_birth": "2005-01-08",
+                            "first_name": "Catalina Enid",
+                            "last_name": "Allende Vigueras",
+                            "loyalty_number": null,
+                            "loyalty_tier": null,
+                            "middle_name": "",
+                            "nationality": "CL",
+                            "type": "A",
+                            "email": null,
+                            "phone": null
+                        }
+                    ],
+                    "pnr": "GBC7TQ"
                 },
-                {
-                    "key": "establishment",
-                    "value": "TERPELPALMITAS"
+                "order": {
+                    "fee_amount": 0,
+                    "items": [
+                        {
+                            "brand": null,
+                            "category": "Ancillaries",
+                            "id": "ACAA",
+                            "manufacture_part_number": null,
+                            "name": "Baggage",
+                            "quantity": 1,
+                            "sku_code": "Service",
+                            "unit_amount": 1000
+                        }
+                    ],
+                    "shipping_amount": 0,
+                    "sales_channel": "WebDuringBooking"
                 }
-                {
-                    "key": "with3DS",
-                    "value": "no"
-                },*/
+            },
+            "metadata": [
                 {
                     "key": "processor",
-                    "value": "WOMPI"
-                }/*,
+                    "value": "GETNET"
+                },
                 {
-                    "key": "fraudValidation",
-                    "value": "no"
-                }*/
+                    "key": "with3DS",
+                    "value": "yes"
+                }
             ]
         }
         console.log(body);

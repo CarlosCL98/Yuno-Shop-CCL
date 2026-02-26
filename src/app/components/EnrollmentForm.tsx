@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { loadScript } from '@yuno-payments/sdk-web';
-import { Yuno, YunoInstance } from '@yuno-payments/sdk-web-types';
 import InputField from "./InputField";
 import SelectField from "./SelectField";
 import { countries, getCountryData, getPhoneCountryCode, getDefaultDocumentType, getSampleDocumentNumber, getDocumentTypes } from "../data/countries";
@@ -301,8 +299,7 @@ export default function EnrollmentForm() {
 
     useEffect(() => {
         const initializeYuno = async () => {
-            const yuno = (await loadScript()) as Yuno;
-            const yunoInstance = await yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!) as YunoInstance;
+            const yunoInstance = await Yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!);
             setYunoInstance(yunoInstance);
 
             if (!yunoInstance) return;

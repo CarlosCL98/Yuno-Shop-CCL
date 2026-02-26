@@ -41,6 +41,7 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
         <link rel="preconnect" href="https://sdk-web.y.uno" />
         <link rel="preconnect" href="https://api.y.uno" />
         <link rel="preconnect" href="https://sdk-web-card.prod.y.uno" />
+        <script src="https://sdk-web.y.uno/v1.5/main.js" defer></script>
       </head>
       <body className="font-sans bg-gray-50 text-gray-900">
         <Providers>

@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   try {
     const params = await request.json();
 
-    const merchant_order_id = generateUniqueId("shopccl_sessioncheckouttest");
+    const merchant_order_id = generateUniqueId("shopccl-sessioncheckouttest");
     const apiBaseUrl = getYunoApiBaseUrl(process.env.NEXT_PUBLIC_API_KEY!);
 
     // DEBUG: Log environment variables (safely)
@@ -30,9 +30,13 @@ export async function POST(request: Request) {
         "value": roundedAmount
       },
       "metadata": [
-        { 
-          "key": "PromoCode", 
-          "value": "BCIMACHC"
+        {
+          "key": "processor",
+          "value": "GETNET"
+        },
+        {
+          "key": "with3DS",
+          "value": "yes"
         }
       ]
       /*"installments": {

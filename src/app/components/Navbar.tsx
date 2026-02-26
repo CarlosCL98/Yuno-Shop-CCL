@@ -59,6 +59,14 @@ export default function Navbar() {
                                 ⚡ Seamless Checkout
                                 <span className="block text-xs text-green-600 mt-0.5">Smart & Fast</span>
                             </Link>
+                            <Link
+                                href="/checkout-customized"
+                                onClick={() => setShowCheckoutMenu(false)}
+                                className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition border-t border-gray-100"
+                            >
+                                🔧 Customized Checkout
+                                <span className="block text-xs text-orange-600 mt-0.5">Raw JSON Replay</span>
+                            </Link>
                         </div>
                     )}
                 </div>

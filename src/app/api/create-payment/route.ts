@@ -59,10 +59,6 @@ export async function POST(request: Request) {
                     "card": {
                         "verify": false,
                         "capture": true,
-                        "store_credentials": {
-                            "reason": "CARD_ON_FILE",
-                            "usage": "FIRST"
-                        }
                     }
                 }
             },
@@ -106,7 +102,22 @@ export async function POST(request: Request) {
                             "phone": null
                         }
                     ],
-                    "pnr": "GBC7TQ"
+                    "pnr": "GBC7TQ",
+                    "tickets": [
+                        {
+                            "ticket_number": "H9WGMQ",
+                            "restricted": false,
+                            "total_fare_amount": 51800.0000,
+                            "total_tax_amount": 0,
+                            "total_fee_amount": 0,
+                            "e_ticket": false,
+                            "issue": {
+                                "date": "2026-03-02T15:35:42",
+                                "booking_system_code": "H9WGMQ",
+                                "booking_system_name": "Navitaire"
+                            }
+                        }
+                    ]
                 },
                 "order": {
                     "fee_amount": 0,
@@ -129,11 +140,7 @@ export async function POST(request: Request) {
             "metadata": [
                 {
                     "key": "processor",
-                    "value": "GETNET"
-                },
-                {
-                    "key": "with3DS",
-                    "value": "yes"
+                    "value": "PAYPAL"
                 }
             ]
         }

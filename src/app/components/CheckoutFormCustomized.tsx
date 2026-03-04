@@ -52,6 +52,7 @@ const getDefaultCheckoutJson = (customerId?: string) => ({
 const getDefaultPaymentJson = (checkoutSession?: string, customerId?: string) => ({
   merchant_order_id: `shopccl-custom-pay-${Date.now()}`,
   description: "Customized payment test",
+  callback_url: typeof window !== "undefined" ? `${window.location.origin}/profile` : "",
   country: "CO",
   amount: {
     currency: "COP",
@@ -259,16 +260,27 @@ export default function CheckoutFormCustomized() {
     }
   };
 
+  // Extract country from checkout JSON for SDK
+  const getCountryFromCheckoutJson = (): string => {
+    try {
+      const obj = JSON.parse(checkoutJson);
+      return obj.country || "CO";
+    } catch {
+      return "CO";
+    }
+  };
+
   // Step 3: Mount SDK after checkout session is ready
   const mountSdk = useCallback(() => {
     if (!yunoInstance || !checkoutSession) return;
 
     setSdkReady(false);
+    const countryCode = getCountryFromCheckoutJson();
 
     yunoInstance.startCheckout({
       checkoutSession: checkoutSession,
       elementSelector: "#yuno-checkout-customized",
-      countryCode: "CO",
+      countryCode,
       language: "en",
       showLoading: true,
       issuersFormEnable: true,
@@ -327,7 +339,7 @@ export default function CheckoutFormCustomized() {
 
     yunoInstance.mountCheckout();
     setSdkReady(true);
-  }, [yunoInstance, checkoutSession]);
+  }, [yunoInstance, checkoutSession]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-mount SDK when step 3 becomes active and checkout session exists
   useEffect(() => {
@@ -372,6 +384,9 @@ export default function CheckoutFormCustomized() {
 
   // Helper: step styling
   const getStepClass = (step: number) => {
+    // Step 4 is always interactable (so users can pre-edit payment JSON),
+    // but visually dimmed until the SDK injects the token
+    if (step === 4) return activeStep >= 3 ? "opacity-100" : "opacity-40";
     if (step <= activeStep) return "opacity-100";
     return "opacity-40 pointer-events-none";
   };
@@ -538,20 +553,28 @@ export default function CheckoutFormCustomized() {
           <h2 className="text-lg font-bold">SDK Payment Form</h2>
         </div>
         <div className="p-6 space-y-4">
-          {activeStep >= 3 && checkoutSession ? (
-            <>
-              <p className="text-sm text-gray-600">
-                Checkout session: <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">{checkoutSession}</code>
-              </p>
-              <div id="yuno-checkout-customized" className="w-full min-h-[100px]" />
-              <div id="form-element-customized" className="w-full" />
-              <div id="action-form-customized" className="w-full" />
-              {!sdkReady && (
-                <p className="text-sm text-gray-500">Mounting SDK payment form...</p>
-              )}
-            </>
-          ) : (
+          {activeStep >= 3 && checkoutSession && (
+            <p className="text-sm text-gray-600">
+              Checkout session: <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">{checkoutSession}</code>
+            </p>
+          )}
+          {activeStep < 3 && (
             <p className="text-sm text-gray-400">Complete step 2 to mount the SDK payment form.</p>
+          )}
+          {/* SDK elements always in DOM — hidden until step 3 is active, like Full Checkout does */}
+          <div className={activeStep >= 3 ? "block space-y-4" : "hidden"}>
+            <div id="yuno-checkout-customized" className="w-full min-h-[100px]" />
+            <div id="form-element-customized" className="w-full" />
+            <button
+              type="button"
+              onClick={() => yunoInstance?.startPayment()}
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition w-full"
+            >
+              Pay Now
+            </button>
+          </div>
+          {activeStep >= 3 && !sdkReady && (
+            <p className="text-sm text-gray-500">Mounting SDK payment form...</p>
           )}
         </div>
       </section>
@@ -608,10 +631,10 @@ export default function CheckoutFormCustomized() {
           <button
             type="button"
             onClick={handleSendPayment}
-            disabled={!!paymentJsonError || paymentLoading}
+            disabled={!!paymentJsonError || paymentLoading || activeStep < 4}
             className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition"
           >
-            {paymentLoading ? "Sending..." : "Send POST /v1/payments"}
+            {paymentLoading ? "Sending..." : activeStep < 4 ? "Waiting for oneTimeToken from SDK..." : "Send POST /v1/payments"}
           </button>
           {paymentResponse && (
             <div className={`mt-4 rounded-lg border-2 ${paymentStatus && paymentStatus >= 200 && paymentStatus < 300 ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}>
@@ -625,6 +648,9 @@ export default function CheckoutFormCustomized() {
           )}
         </div>
       </section>
+
+      {/* 3DS action form — always in DOM and visible so SDK can render challenges/redirects */}
+      <div id="action-form-customized" className="w-full" />
     </div>
   );
 }

@@ -32,11 +32,7 @@ export async function POST(request: Request) {
       "metadata": [
         {
           "key": "processor",
-          "value": "GETNET"
-        },
-        {
-          "key": "with3DS",
-          "value": "yes"
+          "value": "PROSA"
         }
       ]
       /*"installments": {

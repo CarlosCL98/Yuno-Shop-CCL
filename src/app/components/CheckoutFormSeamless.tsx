@@ -244,13 +244,14 @@ export default function CheckoutFormSeamless() {
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              oneTimeToken, 
-              checkoutSessionId: checkoutSession, 
-              customerId, 
-              total: convertedTotal, 
-              currency, 
-              country: customerData.country
+            body: JSON.stringify({
+              oneTimeToken,
+              checkoutSessionId: checkoutSession,
+              customerId,
+              total: convertedTotal,
+              currency,
+              country: customerData.country,
+              paymentMethodType: paymentMethod?.type,
             }),
           });
 

@@ -196,14 +196,15 @@ export default function CheckoutFormFull() {
           console.log("Payment amount being sent:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
           
           // Build request body - include full customer info for guest checkout
-          const paymentBody: any = { 
-            oneTimeToken, 
-            checkoutSessionId, 
-            total: convertedTotal, 
-            currency, 
+          const paymentBody: any = {
+            oneTimeToken,
+            checkoutSessionId,
+            total: convertedTotal,
+            currency,
             country: customerData.country || '',
             merchant_customer_created_at: customerData.merchant_customer_created_at,
-            isGuestCheckout: useGuestCheckout
+            isGuestCheckout: useGuestCheckout,
+            paymentMethodType: tokenWithInformation?.payment_method_type || tokenWithInformation?.type,
           };
 
           // If guest checkout, send full customer_payer info instead of customerId

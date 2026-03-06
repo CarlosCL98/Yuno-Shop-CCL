@@ -285,14 +285,15 @@ export default function CheckoutFormLite() {
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              oneTimeToken, 
-              checkoutSessionId, 
-              customerId, 
-              total: convertedTotal, 
-              currency, 
+            body: JSON.stringify({
+              oneTimeToken,
+              checkoutSessionId,
+              customerId,
+              total: convertedTotal,
+              currency,
               country: customerData.country,
-              merchant_customer_created_at: customerData.merchant_customer_created_at
+              merchant_customer_created_at: customerData.merchant_customer_created_at,
+              paymentMethodType: selectedPaymentMethod?.type,
             }),
           });
 
@@ -404,14 +405,15 @@ export default function CheckoutFormLite() {
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              oneTimeToken, 
-              checkoutSessionId, 
-              customerId, 
-              total: convertedTotal, 
-              currency, 
+            body: JSON.stringify({
+              oneTimeToken,
+              checkoutSessionId,
+              customerId,
+              total: convertedTotal,
+              currency,
               country: customerData.country,
-              merchant_customer_created_at: customerData.merchant_customer_created_at
+              merchant_customer_created_at: customerData.merchant_customer_created_at,
+              paymentMethodType: selectedPaymentMethod?.type,
             }),
           });
 

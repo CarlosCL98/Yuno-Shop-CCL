@@ -59,6 +59,12 @@ export async function POST(request: Request) {
                     "card": {
                         "verify": false,
                         "capture": true,
+                        ...(params.paymentMethodType === "CLICK_TO_PAY" && {
+                            "store_credentials": {
+                                "reason": "CARD_ON_FILE",
+                                "usage": "FIRST"
+                            }
+                        }),
                     }
                 }
             },

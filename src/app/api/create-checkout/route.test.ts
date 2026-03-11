@@ -58,13 +58,13 @@ describe("POST /api/create-checkout", () => {
     expect(body.amount.currency).toBe("COP");
   });
 
-  it("defaults currency to PEN", async () => {
+  it("defaults currency to USD", async () => {
     fetchMock.mockResolvedValueOnce(createMockFetchResponse({ checkout_session: "cs_4" }));
 
     await POST(createMockRequest({ amount: 50, country: "PE" }));
 
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body.amount.currency).toBe("PEN");
+    expect(body.amount.currency).toBe("USD");
   });
 
   it("non-ok response returns error with status", async () => {

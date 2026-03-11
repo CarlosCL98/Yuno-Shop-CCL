@@ -79,39 +79,53 @@ describe("POST /api/create-payment", () => {
     expect(body.customer_payer).toEqual({ id: "cust_123" });
   });
 
-  it("CLICK_TO_PAY adds store_credentials", async () => {
+  it("card detail includes verify and capture flags", async () => {
     fetchMock.mockResolvedValueOnce(createMockFetchResponse({ id: "pay_3" }));
 
     const req = createMockRequest({
       customerId: "cust_1",
       checkoutSessionId: "sess_3",
       oneTimeToken: "tok_3",
-      paymentMethodType: "CLICK_TO_PAY",
     });
 
     await POST(req);
 
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body.payment_method.detail.card.store_credentials).toEqual({
-      reason: "CARD_ON_FILE",
-      usage: "FIRST",
-    });
+    expect(body.payment_method.detail.card.verify).toBe(false);
+    expect(body.payment_method.detail.card.capture).toBe(true);
   });
 
-  it("non-CLICK_TO_PAY omits store_credentials", async () => {
-    fetchMock.mockResolvedValueOnce(createMockFetchResponse({ id: "pay_4" }));
+  it("rounds amount to 2 decimals", async () => {
+    fetchMock.mockResolvedValueOnce(createMockFetchResponse({ id: "pay_round" }));
 
     const req = createMockRequest({
       customerId: "cust_1",
-      checkoutSessionId: "sess_4",
-      oneTimeToken: "tok_4",
-      paymentMethodType: "CARD",
+      checkoutSessionId: "sess_r",
+      oneTimeToken: "tok_r",
+      total: 19.999,
+      currency: "PEN",
     });
 
     await POST(req);
 
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body.payment_method.detail.card.store_credentials).toBeUndefined();
+    expect(body.amount.value).toBe(20);
+  });
+
+  it("defaults currency to USD when not provided", async () => {
+    fetchMock.mockResolvedValueOnce(createMockFetchResponse({ id: "pay_def" }));
+
+    const req = createMockRequest({
+      customerId: "cust_1",
+      checkoutSessionId: "sess_d",
+      oneTimeToken: "tok_d",
+      total: 100,
+    });
+
+    await POST(req);
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.amount.currency).toBe("USD");
   });
 
   it("returns Yuno API response JSON", async () => {

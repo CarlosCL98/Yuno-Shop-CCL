@@ -22,11 +22,11 @@ export async function POST(request: Request) {
       "account_id": process.env.ACCOUNT_CODE!,
       "merchant_order_id": merchant_order_id,
       "payment_description": "Test Yuno Shop CCL",
-      "callback_url": "https://localhost:3000/profile",
+      //"callback_url": "https://localhost:3000/profile",
       "country": params.country,
       "customer_id": params.customer_id,
       "amount": {
-        "currency": params.currency || "PEN",
+        "currency": params.currency || "USD",
         "value": roundedAmount
       },
       "metadata": [

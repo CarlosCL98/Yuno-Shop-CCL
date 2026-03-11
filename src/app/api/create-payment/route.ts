@@ -45,8 +45,8 @@ export async function POST(request: Request) {
             "callback_url": "https://yuno-shop-ccl.vercel.app/profile",
             "country": params.country || "CO",
             "amount": {
-                "currency": params.currency || "COP",
-                "value": params.total || 0
+                "currency": params.currency || "USD",
+                "value": Math.round(Number(params.total || 0) * 100) / 100
             },
             "checkout": {
                 "session": params.checkoutSessionId
@@ -59,12 +59,6 @@ export async function POST(request: Request) {
                     "card": {
                         "verify": false,
                         "capture": true,
-                        ...(params.paymentMethodType === "CLICK_TO_PAY" && {
-                            "store_credentials": {
-                                "reason": "CARD_ON_FILE",
-                                "usage": "FIRST"
-                            }
-                        }),
                     }
                 }
             },
@@ -85,8 +79,8 @@ export async function POST(request: Request) {
                             "departure_airport_city": "SCL",
                             "departure_airport_timezone": "-05:00",
                             "departure_datetime": "2026-06-13T01:45:00",
-                            "fare_basis_code": null,
-                            "fare_class_code": null,
+                            "fare_basis_code": "X",
+                            "fare_class_code": "X",
                             "flight_number": "731",
                             "stopover_code": "X",
                             "route_order": 0,
@@ -95,7 +89,7 @@ export async function POST(request: Request) {
                     ],
                     "passengers": [
                         {
-                            "country": null,
+                            "country": "CL",
                             "date_of_birth": "2005-01-08",
                             "first_name": "Catalina Enid",
                             "last_name": "Allende Vigueras",

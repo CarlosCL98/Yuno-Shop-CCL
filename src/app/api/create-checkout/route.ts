@@ -30,11 +30,27 @@ export async function POST(request: Request) {
         "value": roundedAmount
       },
       "metadata": [
-        {
-          "key": "processor",
-          "value": "PROSA"
-        }
-      ]
+                {
+                    "key": "sales_channel",
+                    "value": "WebDuringBooking"
+                },
+                {
+                    "key": "TestKey1",
+                    "value": "TestValue1"
+                },
+                {
+                    "key": "TestKey2",
+                    "value": "TestValue2"
+                },
+                {
+                    "key": "Promocode",
+                    "value": "BCIMACHC"
+                },
+                {
+                    "key": "SuperPromoCode",
+                    "value": "n/a"
+                }
+            ]
       /*"installments": {
         "plan_id": "9d48bcd9-66ba-4194-969f-01db08a2e381"
       }*/

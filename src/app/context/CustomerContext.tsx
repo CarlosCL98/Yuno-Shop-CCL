@@ -54,11 +54,11 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 
 // Default customer data
 const getDefaultCustomerData = (): CustomerData => ({
-  merchant_customer_id: "shopccl_customertest_001_co_date",
+  merchant_customer_id: "shopccl_customertest_co",
   merchant_customer_created_at: "2026-02-03T14:50:58Z",
-  first_name: "Test",
-  last_name: "User",
-  email: "carlos.medina@y.uno", // For MP test_user_1631154188@testuser.com
+  first_name: "Carlos",
+  last_name: "Medina",
+  email: "carlos+auto_inprogress_3ds2_autoaccept@gmail.com", // For MP test_user_1631154188@testuser.com - test_user_8581333282405418682@testuser.com
   country: "CO",
   gender: "M",
   date_of_birth: "2000-12-14",

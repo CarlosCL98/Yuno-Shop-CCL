@@ -29,28 +29,13 @@ export async function POST(request: Request) {
         "currency": params.currency || "USD",
         "value": roundedAmount
       },
+      "workflow":"SDK_SEAMLESS",
       "metadata": [
-                {
-                    "key": "sales_channel",
-                    "value": "WebDuringBooking"
-                },
-                {
-                    "key": "TestKey1",
-                    "value": "TestValue1"
-                },
-                {
-                    "key": "TestKey2",
-                    "value": "TestValue2"
-                },
-                {
-                    "key": "Promocode",
-                    "value": "BCIMACHC"
-                },
-                {
-                    "key": "SuperPromoCode",
-                    "value": "n/a"
-                }
-            ]
+        {
+          "key": "fraudValidation",
+          "value": "yes"
+        }
+      ]
       /*"installments": {
         "plan_id": "9d48bcd9-66ba-4194-969f-01db08a2e381"
       }*/

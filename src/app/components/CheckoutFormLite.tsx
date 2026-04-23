@@ -34,7 +34,7 @@ export default function CheckoutFormLite() {
   const router = useRouter();
 
   // Calculate the final amount to use (custom or cart total)
-  const finalAmount = useCustomAmount && customAmount ? parseFloat(customAmount) : total;
+  const finalAmount = useCustomAmount && customAmount ? Number(parseFloat(customAmount).toFixed(2)) : total;
 
   const [sameAsShipping, setSameAsShipping] = useState(false);
 
@@ -70,7 +70,7 @@ export default function CheckoutFormLite() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
+
     // Update currency and all country-related data when country changes
     if (name === "country") {
       setCountry(value);
@@ -85,7 +85,7 @@ export default function CheckoutFormLite() {
     section: "document" | "phone" | "billing_address" | "shipping_address"
   ) => {
     const { name, value } = e.target;
-    
+
     // Update currency and all country-related data when country changes in any section
     if (name === "country") {
       setCountry(value);
@@ -113,7 +113,7 @@ export default function CheckoutFormLite() {
       // If using custom amount, it's already in the selected currency, so don't convert
       // If using cart total, convert from USD to selected currency
       // Round to 2 decimal places to avoid floating-point precision issues
-      const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(finalAmount, "USD")) * 100) / 100;
+      const convertedTotal = useCustomAmount ? finalAmount : Math.round(convertPrice(finalAmount, "USD") * 100) / 100;
       console.log("Checkout session amount:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
       const response = await fetch("/api/create-checkout", {
         method: "POST",
@@ -158,7 +158,7 @@ export default function CheckoutFormLite() {
     setExternalButtonMounted(false); // Reset external button state
     setTermsAccepted(false); // Reset terms for new payment method
     setShowTermsError(false);
-    
+
     // Initialize checkout session but don't mount the form yet
     handleInitCheckout(paymentMethod);
   };
@@ -175,16 +175,16 @@ export default function CheckoutFormLite() {
   // Handler to mount the payment form after terms are accepted
   const handleMountPaymentForm = () => {
     console.log("Mount payment form clicked...");
-    
+
     // Check if terms are accepted
     if (!termsAccepted) {
       setShowTermsError(true);
       return;
     }
-    
+
     setShowTermsError(false);
     console.log("Terms accepted - mounting payment form");
-    
+
     // Mount the form
     if (selectedPaymentMethod) {
       const externalTypes = ['GOOGLE_PAY', 'APPLE_PAY', 'PAYPAL'];
@@ -210,18 +210,18 @@ export default function CheckoutFormLite() {
   // External pay button handler - calls startPayment() on the Yuno SDK
   const handleExternalPay = () => {
     console.log("External Pay button clicked - calling startPayment()...");
-    
+
     // Check if terms are accepted
     if (!termsAccepted) {
       setShowTermsError(true);
       alert("Please accept the terms and conditions to continue.");
       return;
     }
-    
+
     setShowTermsError(false);
     console.log("Terms accepted - proceeding with payment");
     console.log("Selected payment method:", selectedPaymentMethod?.type);
-    
+
     // For all payment methods, use startPayment
     yunoInstance?.startPayment();
   };
@@ -244,10 +244,10 @@ export default function CheckoutFormLite() {
       showPaymentStatus: true,
       showPayButton: !useExternalPayButton,
       card: {
-        isCreditCardProcessingOnly: true,
+        isCreditCardProcessingOnly: false,
         type: "extends",
         styles: '',
-        cardSaveEnable: true,
+        cardSaveEnable: false,
         texts: {}
       },
       onLoading: (args: any) => {
@@ -273,14 +273,14 @@ export default function CheckoutFormLite() {
           alert("You must accept the terms and conditions to complete the payment.");
           throw new Error("Terms and conditions not accepted");
         }
-        
+
         try {
           console.log("Terms accepted - creating payment...");
           setShowTermsError(false);
-          
+
           const customerId = localStorage.getItem("yuno_customer_id");
           const checkoutSessionId = localStorage.getItem("yuno_checkout_session");
-          const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(total, "USD")) * 100) / 100;
+          const convertedTotal = useCustomAmount ? finalAmount : Math.round(convertPrice(total, "USD") * 100) / 100;
           console.log("Payment amount being sent:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
@@ -307,7 +307,7 @@ export default function CheckoutFormLite() {
             created_at: payment.created_at,
           };
           addPayment(paymentData);
-          const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: true });
+          const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: false });
           console.log("Response action:", responseAction);
         } catch (error) {
           console.error("Error sending data:", error);
@@ -329,7 +329,7 @@ export default function CheckoutFormLite() {
   const handleStartCheckout = (paymentMethod?: PaymentMethod) => {
     // Use the passed payment method or fall back to state
     const currentPaymentMethod = paymentMethod || selectedPaymentMethod;
-    
+
     if (!currentPaymentMethod) return;
 
     // First initialize the checkout session
@@ -340,11 +340,11 @@ export default function CheckoutFormLite() {
       language: 'en',
       showLoading: true,
       issuersFormEnable: true,
-      showPaymentStatus: true,
+      showPaymentStatus: false,
       // Hide Yuno's internal pay button when using external pay button
-      showPayButton: !useExternalPayButton,
+      showPayButton: true,
       card: {
-        isCreditCardProcessingOnly: true,
+        isCreditCardProcessingOnly: false,
         type: "extends",
         styles: '',
         cardSaveEnable: true,
@@ -377,12 +377,13 @@ export default function CheckoutFormLite() {
       yunoError: (message: any, data: any) => {
         console.error('Payment error:', message, data);
       },
-      async yunoCreatePayment(oneTimeToken: any) {
+      async yunoCreatePayment(oneTimeToken: any, tokenWithInformation: any) {
         /**
         * The createPayment function calls the backend to create a payment in Yuno.
         * It uses the following endpoint https://docs.y.uno/reference/create-payment
         */
-        
+        console.log('Token: ', oneTimeToken);
+        console.log('Token With Info: ', tokenWithInformation);
         // Check if terms are accepted before creating payment
         if (!termsAcceptedRef.current) {
           console.error("Terms and conditions not accepted");
@@ -390,17 +391,17 @@ export default function CheckoutFormLite() {
           alert("You must accept the terms and conditions to complete the payment.");
           throw new Error("Terms and conditions not accepted");
         }
-        
+
         try {
           console.log("Terms accepted - creating payment...");
           setShowTermsError(false);
-          
+
           // Create the payment
           const customerId = localStorage.getItem("yuno_customer_id");
           const checkoutSessionId = localStorage.getItem("yuno_checkout_session");
           // Use the same converted total that was used for the checkout session
           // Round to 2 decimal places to avoid floating-point precision issues
-          const convertedTotal = Math.round((useCustomAmount ? finalAmount : convertPrice(total, "USD")) * 100) / 100;
+          const convertedTotal = useCustomAmount ? finalAmount : Math.round(convertPrice(total, "USD") * 100) / 100;
           console.log("Payment amount being sent:", convertedTotal, "useCustomAmount:", useCustomAmount, "finalAmount:", finalAmount);
           const paymentResponse = await fetch("/api/create-payment", {
             method: "POST",
@@ -427,7 +428,7 @@ export default function CheckoutFormLite() {
             created_at: payment.created_at,
           };
           addPayment(paymentData);
-          const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: true });
+          const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: false });
           console.log("Response action:", responseAction);
           /*if (payment.checkout.sdk_action_required) {
             const responseAction = await yunoInstance?.continuePayment({ showPaymentStatus: true });
@@ -447,8 +448,8 @@ export default function CheckoutFormLite() {
       renderMode: {
         type: 'element',
         elementSelector: {
-          apmForm: "#form-element",
-          actionForm: "#action-form-element"
+          apmForm: "#yuno-container",
+          //actionForm: "#action-form-element"
         }
       },
     });
@@ -470,8 +471,20 @@ export default function CheckoutFormLite() {
   };
 
   useEffect(() => {
+    const waitForYunoSDK = (): Promise<typeof Yuno> =>
+      new Promise((resolve) => {
+        if (typeof Yuno !== "undefined") return resolve(Yuno);
+        const interval = setInterval(() => {
+          if (typeof Yuno !== "undefined") {
+            clearInterval(interval);
+            resolve(Yuno);
+          }
+        }, 100);
+      });
+
     const initializeYuno = async () => {
-      const yunoInstance = await Yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!);
+      const sdk = await waitForYunoSDK();
+      const yunoInstance = await sdk.initialize(process.env.NEXT_PUBLIC_API_KEY!);
       setYunoInstance(yunoInstance);
 
       if (!yunoInstance) return;
@@ -483,306 +496,308 @@ export default function CheckoutFormLite() {
 
 
   return (
-    <form className="space-y-10 max-w-4xl mx-auto px-4 py-6 bg-white rounded-xl shadow-md">
-      {/* Cart Summary */}
-      {!showPaymentMethods && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">🧾 Purchase Summary</h2>
-          <div className="space-y-2">
-            {cartItems.map((item) => (
-              <div key={item.id} className="flex justify-between text-gray-700">
-                <span>{item.name} × {item.quantity}</span>
-                <span>{formatPrice(item.price * item.quantity)}</span>
-              </div>
-            ))}
-            <hr className="my-3 border-gray-300" />
-            <p className="text-right text-lg font-semibold text-gray-900">
-              Cart Total: {formatPrice(total)}
-            </p>
-          </div>
-
-          {/* Custom Amount for Testing */}
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <label className="flex items-center gap-2 mb-3 text-gray-700 font-medium">
-              <input
-                type="checkbox"
-                checked={useCustomAmount}
-                onChange={(e) => {
-                  setUseCustomAmount(e.target.checked);
-                  if (!e.target.checked) setCustomAmount("");
-                }}
-                className="w-4 h-4"
-              />
-              🧪 Use custom amount for testing
-            </label>
-            {useCustomAmount && (
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
-                  placeholder="Enter test amount"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <span className="flex items-center px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
-                  {currency}
-                </span>
-              </div>
-            )}
-            {useCustomAmount && customAmount && (
-              <p className="mt-2 text-sm font-semibold text-blue-700">
-                Test Amount: {currency} {parseFloat(customAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    <>
+      <form className="space-y-10 max-w-4xl mx-auto px-4 py-6 bg-white rounded-xl shadow-md">
+        {/* Cart Summary */}
+        {!showPaymentMethods && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">🧾 Purchase Summary</h2>
+            <div className="space-y-2">
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex justify-between text-gray-700">
+                  <span>{item.name} × {item.quantity}</span>
+                  <span>{formatPrice(item.price * item.quantity)}</span>
+                </div>
+              ))}
+              <hr className="my-3 border-gray-300" />
+              <p className="text-right text-lg font-semibold text-gray-900">
+                Cart Total: {formatPrice(total)}
               </p>
-            )}
-          </div>
+            </div>
 
-          {/* External Pay Button Option */}
-          <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <label className="flex items-center gap-2 text-gray-700 font-medium cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useExternalPayButton}
-                onChange={(e) => setUseExternalPayButton(e.target.checked)}
-                className="w-4 h-4 accent-purple-600"
-              />
-              🎮 Use external Pay button
-            </label>
-            <p className="text-sm text-gray-500 mt-1 ml-6">
-              {useExternalPayButton 
-                ? "Yuno's internal Pay button will be hidden. Use your own button to trigger payment." 
-                : "Yuno's internal Pay button will be shown in the form."}
-            </p>
-          </div>
-        </section>
-      )}
+            {/* Custom Amount for Testing */}
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <label className="flex items-center gap-2 mb-3 text-gray-700 font-medium">
+                <input
+                  type="checkbox"
+                  checked={useCustomAmount}
+                  onChange={(e) => {
+                    setUseCustomAmount(e.target.checked);
+                    if (!e.target.checked) setCustomAmount("");
+                  }}
+                  className="w-4 h-4"
+                />
+                🧪 Use custom amount for testing
+              </label>
+              {useCustomAmount && (
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    placeholder="Enter test amount"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <span className="flex items-center px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 font-medium">
+                    {currency}
+                  </span>
+                </div>
+              )}
+              {useCustomAmount && customAmount && (
+                <p className="mt-2 text-sm font-semibold text-blue-700">
+                  Test Amount: {currency} {parseFloat(customAmount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              )}
+            </div>
 
-      {/* Payer Information */}
-      {!showPaymentMethods && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">👤 Payer Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField name="first_name" placeholder="First Name" value={customerData.first_name || ''} onChange={handleChange} />
-            <InputField name="last_name" placeholder="Last Name" value={customerData.last_name || ''} onChange={handleChange} />
-            <SelectField 
-              name="country" 
-              placeholder="Select Country" 
-              value={customerData.country || ''} 
-              onChange={handleChange}
-              options={countries.map(country => ({ 
-                value: country.isoCode, 
-                label: country.name 
-              }))}
-            />
-            <InputField name="email" type="email" placeholder="Email" value={customerData.email || ''} onChange={handleChange} />
-            <SelectField 
-              name="document_type" 
-              placeholder="Document Type" 
-              value={customerData.document?.document_type || ''} 
-              onChange={(e) => handleNestedChange(e, "document")}
-              options={getDocumentTypes(customerData.country || '').map(docType => ({ 
-                value: docType, 
-                label: docType 
-              }))}
-            />
-            <InputField name="document_number" placeholder="Document Number" value={customerData.document?.document_number || ''} onChange={(e) => handleNestedChange(e, "document")} />
-            <InputField name="number" type="tel" placeholder="Phone Number" value={customerData.phone?.number || ''} onChange={(e) => handleNestedChange(e, "phone")} />
-          </div>
-        </section>
-      )}
+            {/* External Pay Button Option */}
+            <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+              <label className="flex items-center gap-2 text-gray-700 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useExternalPayButton}
+                  onChange={(e) => setUseExternalPayButton(e.target.checked)}
+                  className="w-4 h-4 accent-purple-600"
+                />
+                🎮 Use external Pay button
+              </label>
+              <p className="text-sm text-gray-500 mt-1 ml-6">
+                {useExternalPayButton
+                  ? "Yuno's internal Pay button will be hidden. Use your own button to trigger payment."
+                  : "Yuno's internal Pay button will be shown in the form."}
+              </p>
+            </div>
+          </section>
+        )}
 
-      {/* Shipping Address */}
-      {!showPaymentMethods && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">📦 Shipping Address</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField name="address_line_1" placeholder="Address" value={customerData.shipping_address?.address_line_1 || ''} onChange={(e) => handleNestedChange(e, "shipping_address")} />
-            <InputField name="city" placeholder="City" value={customerData.shipping_address?.city || ''} onChange={(e) => handleNestedChange(e, "shipping_address")} />
-            <SelectField 
-              name="country" 
-              placeholder="Select Country" 
-              value={customerData.shipping_address?.country || ''} 
-              onChange={(e) => handleNestedChange(e, "shipping_address")}
-              options={countries.map(country => ({ 
-                value: country.isoCode, 
-                label: country.name 
-              }))}
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Billing Address */}
-      {!showPaymentMethods && (
-        <section>
-          <h2 className="text-2xl font-bold mb-4">🧾 Billing Address</h2>
-          <label className="flex items-center gap-2 mb-4 text-gray-700">
-            <input
-              type="checkbox"
-              checked={sameAsShipping}
-              onChange={(e) => {
-                setSameAsShipping(e.target.checked);
-                e.target.checked ? handleCopyAddress() : handleDeleteAddress();
-              }}
-            />
-            Use the same as shipping address
-          </label>
-
-          {!sameAsShipping && (
+        {/* Payer Information */}
+        {!showPaymentMethods && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">👤 Payer Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField name="address_line_1" placeholder="Address" value={customerData.billing_address?.address_line_1 || ''} onChange={(e) => handleNestedChange(e, "billing_address")} />
-              <InputField name="city" placeholder="City" value={customerData.billing_address?.city || ''} onChange={(e) => handleNestedChange(e, "billing_address")} />
-              <SelectField 
-                name="country" 
-                placeholder="Select Country" 
-                value={customerData.billing_address?.country || ''} 
-                onChange={(e) => handleNestedChange(e, "billing_address")}
-                options={countries.map(country => ({ 
-                  value: country.isoCode, 
-                  label: country.name 
+              <InputField name="first_name" placeholder="First Name" value={customerData.first_name || ''} onChange={handleChange} />
+              <InputField name="last_name" placeholder="Last Name" value={customerData.last_name || ''} onChange={handleChange} />
+              <SelectField
+                name="country"
+                placeholder="Select Country"
+                value={customerData.country || ''}
+                onChange={handleChange}
+                options={countries.map(country => ({
+                  value: country.isoCode,
+                  label: country.name
+                }))}
+              />
+              <InputField name="email" type="email" placeholder="Email" value={customerData.email || ''} onChange={handleChange} />
+              <SelectField
+                name="document_type"
+                placeholder="Document Type"
+                value={customerData.document?.document_type || ''}
+                onChange={(e) => handleNestedChange(e, "document")}
+                options={getDocumentTypes(customerData.country || '').map(docType => ({
+                  value: docType,
+                  label: docType
+                }))}
+              />
+              <InputField name="document_number" placeholder="Document Number" value={customerData.document?.document_number || ''} onChange={(e) => handleNestedChange(e, "document")} />
+              <InputField name="number" type="tel" placeholder="Phone Number" value={customerData.phone?.number || ''} onChange={(e) => handleNestedChange(e, "phone")} />
+            </div>
+          </section>
+        )}
+
+        {/* Shipping Address */}
+        {!showPaymentMethods && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">📦 Shipping Address</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InputField name="address_line_1" placeholder="Address" value={customerData.shipping_address?.address_line_1 || ''} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+              <InputField name="city" placeholder="City" value={customerData.shipping_address?.city || ''} onChange={(e) => handleNestedChange(e, "shipping_address")} />
+              <SelectField
+                name="country"
+                placeholder="Select Country"
+                value={customerData.shipping_address?.country || ''}
+                onChange={(e) => handleNestedChange(e, "shipping_address")}
+                options={countries.map(country => ({
+                  value: country.isoCode,
+                  label: country.name
                 }))}
               />
             </div>
-          )}
+          </section>
+        )}
 
-          <div className="flex gap-4 mt-4">
-            <button
-              type="button"
-              onClick={handleSubmit}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition"
-            >
-              Confirm Information
-            </button>
-            <button
-              type="button"
-              onClick={clearCachedCustomerId}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm transition"
-              title="Clear cached customer data to force update"
-            >
-              🔄 Clear Cache
-            </button>
-          </div>
-        </section>
-      )}
+        {/* Billing Address */}
+        {!showPaymentMethods && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">🧾 Billing Address</h2>
+            <label className="flex items-center gap-2 mb-4 text-gray-700">
+              <input
+                type="checkbox"
+                checked={sameAsShipping}
+                onChange={(e) => {
+                  setSameAsShipping(e.target.checked);
+                  e.target.checked ? handleCopyAddress() : handleDeleteAddress();
+                }}
+              />
+              Use the same as shipping address
+            </label>
 
-      {/* Payment Methods Selection */}
-      {showPaymentMethods && (
-        <section>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">💳 Choose Your Payment Method</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paymentMethods.map((method, index) => {
-              const isSelected = getSelectedPaymentMethodId() === getPaymentMethodId(method);
-              const isVaulted = method.vaulted_token;
-              
-              return (
-                <div
-                  key={index}
-                  onClick={() => handlePaymentMethodSelect(method)}
-                  className={`
+            {!sameAsShipping && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InputField name="address_line_1" placeholder="Address" value={customerData.billing_address?.address_line_1 || ''} onChange={(e) => handleNestedChange(e, "billing_address")} />
+                <InputField name="city" placeholder="City" value={customerData.billing_address?.city || ''} onChange={(e) => handleNestedChange(e, "billing_address")} />
+                <SelectField
+                  name="country"
+                  placeholder="Select Country"
+                  value={customerData.billing_address?.country || ''}
+                  onChange={(e) => handleNestedChange(e, "billing_address")}
+                  options={countries.map(country => ({
+                    value: country.isoCode,
+                    label: country.name
+                  }))}
+                />
+              </div>
+            )}
+
+            <div className="flex gap-4 mt-4">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition"
+              >
+                Confirm Information
+              </button>
+              <button
+                type="button"
+                onClick={clearCachedCustomerId}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm transition"
+                title="Clear cached customer data to force update"
+              >
+                🔄 Clear Cache
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* Payment Methods Selection */}
+        {showPaymentMethods && (
+          <section>
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">💳 Choose Your Payment Method</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paymentMethods.map((method, index) => {
+                const isSelected = getSelectedPaymentMethodId() === getPaymentMethodId(method);
+                const isVaulted = method.vaulted_token;
+
+                return (
+                  <div
+                    key={index}
+                    onClick={() => handlePaymentMethodSelect(method)}
+                    className={`
                     relative border-2 rounded-xl p-5 cursor-pointer transition-all duration-200 
                     hover:shadow-md hover:-translate-y-0.5 group
-                    ${isSelected 
-                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg' 
-                      : 'border-gray-200 bg-white hover:border-blue-300'
-                    }
+                    ${isSelected
+                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-blue-300'
+                      }
                     ${isVaulted ? 'ring-2 ring-green-200 ring-opacity-50' : ''}
                   `}
-                >
-                  {/* Selection indicator */}
-                  {isSelected && (
-                    <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 shadow-lg">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Vaulted token indicator */}
-                  {isVaulted && (
-                    <div className="absolute top-3 right-3">
-                      <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  >
+                    {/* Selection indicator */}
+                    {isSelected && (
+                      <div className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full p-1 shadow-lg">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
-                        <span>Saved</span>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="flex items-start space-x-4">
-                    {/* Payment method icon */}
-                    <div className={`
+                    {/* Vaulted token indicator */}
+                    {isVaulted && (
+                      <div className="absolute top-3 right-3">
+                        <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <span>Saved</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-start space-x-4">
+                      {/* Payment method icon */}
+                      <div className={`
                       flex-shrink-0 p-3 rounded-lg
                       ${isSelected ? 'bg-white shadow-sm' : 'bg-gray-50 group-hover:bg-gray-100'}
                       transition-colors duration-200
                     `}>
-                      <img
-                        src={method.icon}
-                        alt={method.name}
-                        className="w-8 h-8 object-contain"
-                      />
-                    </div>
-                    
-                    {/* Payment method details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className={`
+                        <img
+                          src={method.icon}
+                          alt={method.name}
+                          className="w-8 h-8 object-contain"
+                        />
+                      </div>
+
+                      {/* Payment method details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className={`
                           font-semibold truncate
                           ${isSelected ? 'text-blue-900' : 'text-gray-900'}
                         `}>
-                          {method.name}
-                        </h3>
-                        {method.preferred && !isVaulted && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            ⭐ Recommended
-                          </span>
-                        )}
-                      </div>
-                      
-                      <p className={`
+                            {method.name}
+                          </h3>
+                          {method.preferred && !isVaulted && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              ⭐ Recommended
+                            </span>
+                          )}
+                        </div>
+
+                        <p className={`
                         text-sm mb-2 line-clamp-2
                         ${isSelected ? 'text-blue-700' : 'text-gray-600'}
                       `}>
-                        {method.description}
-                      </p>
-                      
-                      {isVaulted && (
-                        <div className="flex items-center space-x-1 text-green-600">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span className="text-xs font-medium">One-click payment</span>
-                        </div>
-                      )}
-                      
-                      {!isVaulted && (
-                        <div className="flex items-center space-x-1 text-gray-500">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-0.257-0.257A6 6 0 1118 8zM2 8a6 6 0 1012 0A6 6 0 002 8z" clipRule="evenodd" />
-                          </svg>
-                          <span className="text-xs">Secure payment</span>
-                        </div>
-                      )}
+                          {method.description}
+                        </p>
+
+                        {isVaulted && (
+                          <div className="flex items-center space-x-1 text-green-600">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs font-medium">One-click payment</span>
+                          </div>
+                        )}
+
+                        {!isVaulted && (
+                          <div className="flex items-center space-x-1 text-gray-500">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-0.257-0.257A6 6 0 1118 8zM2 8a6 6 0 1012 0A6 6 0 002 8z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs">Secure payment</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Hover effect overlay */}
-                  <div className={`
+
+                    {/* Hover effect overlay */}
+                    <div className={`
                     absolute inset-0 rounded-xl pointer-events-none transition-opacity duration-200
                     ${isSelected ? 'opacity-0' : 'opacity-0 group-hover:opacity-5 bg-blue-500'}
                   `} />
-                </div>
-              );
-            })}
-          </div>
-          
-        </section>
-      )}
+                  </div>
+                );
+              })}
+            </div>
 
+          </section>
+        )}
+      </form>
+      <div>
         {/* Payment Section */}
         {showPaymentSection && selectedPaymentMethod && (
           <section>
@@ -812,7 +827,7 @@ export default function CheckoutFormLite() {
                 <span>Change Payment Method</span>
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Payment Form Container */}
               <div className="lg:col-span-2 order-2 lg:order-1">
@@ -829,7 +844,7 @@ export default function CheckoutFormLite() {
                     <div id="form-element"></div>
                     <div id="action-form-element" className="mt-4"></div>
                   </div>
-                  
+
                   {/* Show terms gate if form not mounted yet */}
                   {!formMounted ? (
                     <div className="min-h-[300px] flex flex-col items-center justify-center p-8">
@@ -851,9 +866,8 @@ export default function CheckoutFormLite() {
                         </div>
 
                         {/* Terms Checkbox */}
-                        <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-lg transition-colors ${
-                          showTermsError ? 'bg-red-50 border-2 border-red-300' : 'bg-white border-2 border-gray-200 hover:border-blue-300'
-                        }`}>
+                        <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-lg transition-colors ${showTermsError ? 'bg-red-50 border-2 border-red-300' : 'bg-white border-2 border-gray-200 hover:border-blue-300'
+                          }`}>
                           <input
                             type="checkbox"
                             checked={termsAccepted}
@@ -887,11 +901,10 @@ export default function CheckoutFormLite() {
                           type="button"
                           onClick={handleMountPaymentForm}
                           disabled={!termsAccepted}
-                          className={`w-full px-6 py-4 rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg flex items-center justify-center space-x-3 ${
-                            termsAccepted
+                          className={`w-full px-6 py-4 rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg flex items-center justify-center space-x-3 ${termsAccepted
                               ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white transform hover:scale-[1.02] cursor-pointer'
                               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          }`}
+                            }`}
                         >
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -929,7 +942,7 @@ export default function CheckoutFormLite() {
                   )}
                 </div>
               </div>
-              
+
               {/* Enhanced Payment Summary */}
               <div className="order-1 lg:order-2">
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-5 border border-gray-200 sticky top-6">
@@ -940,15 +953,15 @@ export default function CheckoutFormLite() {
                     </svg>
                     Payment Summary
                   </h3>
-                  
+
                   <div className="space-y-3">
-                    
+
                     <div className="flex justify-between py-3 border-t border-gray-300">
                       <span className="text-base font-semibold text-gray-900">Total:</span>
                       <span className="text-lg font-bold text-blue-600">{formatPrice(finalAmount)}</span>
                     </div>
                   </div>
-                  
+
                   <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex items-start space-x-2">
                       <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -965,6 +978,7 @@ export default function CheckoutFormLite() {
             </div>
           </section>
         )}
-    </form>
+      </div>
+    </>
   );
 }

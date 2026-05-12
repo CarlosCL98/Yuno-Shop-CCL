@@ -22,7 +22,10 @@ export default function CheckoutFormFull() {
   const [customAmount, setCustomAmount] = useState<string>("");
   const [useCustomAmount, setUseCustomAmount] = useState(false);
   const [useGuestCheckout, setUseGuestCheckout] = useState(false);
-  const [showCustomPayButton, setShowCustomPayButton] = useState(false); // Toggle to show custom pay button
+  const [showCustomPayButton, setShowCustomPayButton] = useState(false);
+  const [sendStoredCredentials, setSendStoredCredentials] = useState(false);
+  const [storedCredentialsReason, setStoredCredentialsReason] = useState("CARD_ON_FILE");
+  const [storedCredentialsUsage, setStoredCredentialsUsage] = useState("FIRST");
   const router = useRouter();
 
   // Calculate the final amount to use (custom or cart total)
@@ -205,6 +208,12 @@ export default function CheckoutFormFull() {
             merchant_customer_created_at: customerData.merchant_customer_created_at,
             isGuestCheckout: useGuestCheckout,
             paymentMethodType: tokenWithInformation?.payment_method_type || tokenWithInformation?.type,
+            ...(sendStoredCredentials && {
+              storedCredentials: {
+                reason: storedCredentialsReason,
+                usage: storedCredentialsUsage,
+              }
+            }),
           };
 
           // If guest checkout, send full customer_payer info instead of customerId
@@ -296,8 +305,20 @@ export default function CheckoutFormFull() {
   };
 
   useEffect(() => {
+    const waitForYunoSDK = (): Promise<typeof Yuno> =>
+      new Promise((resolve) => {
+        if (typeof Yuno !== "undefined") return resolve(Yuno);
+        const interval = setInterval(() => {
+          if (typeof Yuno !== "undefined") {
+            clearInterval(interval);
+            resolve(Yuno);
+          }
+        }, 100);
+      });
+
     const initializeYuno = async () => {
-      const yunoInstance = await Yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!);
+      const sdk = await waitForYunoSDK();
+      const yunoInstance = await sdk.initialize(process.env.NEXT_PUBLIC_API_KEY!);
       setYunoInstance(yunoInstance);
 
       if (!yunoInstance) return;
@@ -384,10 +405,57 @@ export default function CheckoutFormFull() {
         </div>
       </section>
 
+      {/* Stored Credentials */}
+      <section>
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <label className="flex items-center gap-2 mb-3 text-gray-700 font-medium cursor-pointer">
+            <input
+              type="checkbox"
+              checked={sendStoredCredentials}
+              onChange={(e) => setSendStoredCredentials(e.target.checked)}
+              className="w-4 h-4 accent-green-600"
+            />
+            🔐 Send Stored Credentials
+          </label>
+          <p className="text-sm text-gray-500 ml-6 mb-3">
+            {sendStoredCredentials
+              ? "stored_credentials will be included in payment_method.detail.card"
+              : "No stored_credentials node will be sent"}
+          </p>
+          {sendStoredCredentials && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                <select
+                  value={storedCredentialsReason}
+                  onChange={(e) => setStoredCredentialsReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="CARD_ON_FILE">CARD_ON_FILE</option>
+                  <option value="SUBSCRIPTION">SUBSCRIPTION</option>
+                  <option value="UNSCHEDULED_CARD_ON_FILE">UNSCHEDULED_CARD_ON_FILE</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Usage</label>
+                <select
+                  value={storedCredentialsUsage}
+                  onChange={(e) => setStoredCredentialsUsage(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="FIRST">FIRST</option>
+                  <option value="USED">USED</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Payer Information */}
       <section>
         <h2 className="text-2xl font-bold mb-4">👤 Payer Information</h2>
-        
+
         {/* Guest Checkout Toggle */}
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <label className="flex items-center gap-2 text-gray-700 font-medium cursor-pointer">

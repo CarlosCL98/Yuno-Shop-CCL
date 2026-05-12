@@ -60,7 +60,13 @@ export async function POST(request: Request) {
                 "detail": {
                     "card": {
                         "verify": false,
-                        "capture": true,
+                        "capture": false,
+                        ...(params.storedCredentials && {
+                            "stored_credentials": {
+                                "reason": params.storedCredentials.reason,
+                                "usage": params.storedCredentials.usage,
+                            }
+                        }),
                     }
                 }
             },
@@ -95,7 +101,7 @@ export async function POST(request: Request) {
                             "arrival_datetime": "2026-07-07T12:40:00",
                             "arrival_airport_timezone": "GMT-05",
                             "base_fare": null,
-                            "base_fare_currency": "USD",
+                            "base_fare_currency": null,
                             "carrier_code": "JA",
                             "departure_airport": "SCL",
                             "departure_airport_country": "CL",
@@ -135,9 +141,6 @@ export async function POST(request: Request) {
                         {
                             "ticket_number": "M5RCSF",
                             "restricted": false,
-                            "total_fare_amount": 11.2,
-                            "total_tax_amount": 0,
-                            "total_fee_amount": 0,
                             "e_ticket": false,
                             "issue": {
                                 "date": "2026-03-27T02:33:19",
@@ -158,11 +161,21 @@ export async function POST(request: Request) {
                             "name": "Carry-on baggage",
                             "quantity": 1,
                             "sku_code": "Service",
-                            "unit_amount": 1.2
+                            "unit_amount": 5
+                        },
+                        {
+                            "brand": null,
+                            "category": "Ancillaries",
+                            "id": "STF",
+                            "manufacture_part_number": null,
+                            "name": "Seat Fees",
+                            "quantity": 1,
+                            "sku_code": "Service",
+                            "unit_amount": 5
                         }
                     ],
                     "shipping_amount": 0,
-                    "sales_channel": "WebDuringBooking"
+                    "sales_channel": "WebPostBooking"
                 }
             },
             "metadata": [

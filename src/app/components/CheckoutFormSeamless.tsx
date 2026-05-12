@@ -31,6 +31,9 @@ export default function CheckoutFormSeamless() {
   const [sameAsShipping, setSameAsShipping] = useState(false);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [useCustomAmount, setUseCustomAmount] = useState(false);
+  const [sendStoredCredentials, setSendStoredCredentials] = useState(false);
+  const [storedCredentialsReason, setStoredCredentialsReason] = useState("CARD_ON_FILE");
+  const [storedCredentialsUsage, setStoredCredentialsUsage] = useState("FIRST");
   const router = useRouter();
 
   // Calculate the final amount to use (custom or cart total)
@@ -45,8 +48,20 @@ export default function CheckoutFormSeamless() {
 
   // Initialize Yuno SDK
   useEffect(() => {
+    const waitForYunoSDK = (): Promise<typeof Yuno> =>
+      new Promise((resolve) => {
+        if (typeof Yuno !== "undefined") return resolve(Yuno);
+        const interval = setInterval(() => {
+          if (typeof Yuno !== "undefined") {
+            clearInterval(interval);
+            resolve(Yuno);
+          }
+        }, 100);
+      });
+
     const initializeYuno = async () => {
-      const yunoInstance = await Yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!);
+      const sdk = await waitForYunoSDK();
+      const yunoInstance = await sdk.initialize(process.env.NEXT_PUBLIC_API_KEY!);
       setYunoInstance(yunoInstance);
       if (yunoInstance) console.log("Yuno SDK initialized!");
     };
@@ -252,6 +267,12 @@ export default function CheckoutFormSeamless() {
               currency,
               country: customerData.country,
               paymentMethodType: paymentMethod?.type,
+              ...(sendStoredCredentials && {
+                storedCredentials: {
+                  reason: storedCredentialsReason,
+                  usage: storedCredentialsUsage,
+                }
+              }),
             }),
           });
 
@@ -369,6 +390,51 @@ export default function CheckoutFormSeamless() {
                   <span className="flex items-center px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg">
                     {currency}
                   </span>
+                </div>
+              )}
+            </div>
+
+            {/* Stored Credentials */}
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <label className="flex items-center gap-2 mb-3 text-gray-700 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sendStoredCredentials}
+                  onChange={(e) => setSendStoredCredentials(e.target.checked)}
+                  className="w-4 h-4 accent-green-600"
+                />
+                🔐 Send Stored Credentials
+              </label>
+              <p className="text-sm text-gray-500 ml-6 mb-3">
+                {sendStoredCredentials
+                  ? "stored_credentials will be included in payment_method.detail.card"
+                  : "No stored_credentials node will be sent"}
+              </p>
+              {sendStoredCredentials && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                    <select
+                      value={storedCredentialsReason}
+                      onChange={(e) => setStoredCredentialsReason(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value="CARD_ON_FILE">CARD_ON_FILE</option>
+                      <option value="SUBSCRIPTION">SUBSCRIPTION</option>
+                      <option value="UNSCHEDULED_CARD_ON_FILE">UNSCHEDULED_CARD_ON_FILE</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Usage</label>
+                    <select
+                      value={storedCredentialsUsage}
+                      onChange={(e) => setStoredCredentialsUsage(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value="FIRST">FIRST</option>
+                      <option value="USED">USED</option>
+                    </select>
+                  </div>
                 </div>
               )}
             </div>

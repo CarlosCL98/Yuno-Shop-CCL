@@ -29,16 +29,28 @@ export async function POST(request: Request) {
         "currency": params.currency || "USD",
         "value": roundedAmount
       },
-      "workflow":"SDK_SEAMLESS",
       "metadata": [
         {
           "key": "fraudValidation",
           "value": "yes"
         }
-      ]
-      /*"installments": {
-        "plan_id": "9d48bcd9-66ba-4194-969f-01db08a2e381"
-      }*/
+      ],
+      "installments": {
+        "plan": [
+          {
+            "installment": 1,
+            "rate": 0
+          },
+          {
+            "installment": 3,
+            "rate": 1.2
+          },
+          {
+            "installment": 6,
+            "rate": 1.5
+          }
+        ],
+      }
     }
 
     console.log("📤 Request to Yuno:", {

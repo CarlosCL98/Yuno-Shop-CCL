@@ -126,8 +126,20 @@ export default function CheckoutFormCustomized() {
 
   // Initialize Yuno SDK
   useEffect(() => {
+    const waitForYunoSDK = (): Promise<typeof Yuno> =>
+      new Promise((resolve) => {
+        if (typeof Yuno !== "undefined") return resolve(Yuno);
+        const interval = setInterval(() => {
+          if (typeof Yuno !== "undefined") {
+            clearInterval(interval);
+            resolve(Yuno);
+          }
+        }, 100);
+      });
+
     const initializeYuno = async () => {
-      const instance = await Yuno.initialize(process.env.NEXT_PUBLIC_API_KEY!);
+      const sdk = await waitForYunoSDK();
+      const instance = await sdk.initialize(process.env.NEXT_PUBLIC_API_KEY!);
       setYunoInstance(instance);
       if (instance) console.log("Yuno SDK initialized for customized checkout!");
     };

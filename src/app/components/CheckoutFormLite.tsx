@@ -30,6 +30,9 @@ export default function CheckoutFormLite() {
   const [showTermsError, setShowTermsError] = useState(false);
   const [formMounted, setFormMounted] = useState(false);
   const [externalButtonMounted, setExternalButtonMounted] = useState(false);
+  const [sendStoredCredentials, setSendStoredCredentials] = useState(false);
+  const [storedCredentialsReason, setStoredCredentialsReason] = useState("CARD_ON_FILE");
+  const [storedCredentialsUsage, setStoredCredentialsUsage] = useState("FIRST");
   const termsAcceptedRef = useRef(false);
   const router = useRouter();
 
@@ -265,7 +268,9 @@ export default function CheckoutFormLite() {
       yunoError: (message: any, data: any) => {
         console.error('Payment error:', message, data);
       },
-      async yunoCreatePayment(oneTimeToken: any) {
+      async yunoCreatePayment(oneTimeToken: any, tokenWithInformation: any) {
+        console.log("Token with information:", tokenWithInformation);
+        console.log("One time token:", oneTimeToken); 
         // Check if terms are accepted before creating payment
         if (!termsAcceptedRef.current) {
           console.error("Terms and conditions not accepted");
@@ -294,6 +299,12 @@ export default function CheckoutFormLite() {
               country: customerData.country,
               merchant_customer_created_at: customerData.merchant_customer_created_at,
               paymentMethodType: selectedPaymentMethod?.type,
+              ...(sendStoredCredentials && {
+                storedCredentials: {
+                  reason: storedCredentialsReason,
+                  usage: storedCredentialsUsage,
+                }
+              }),
             }),
           });
 
@@ -415,6 +426,12 @@ export default function CheckoutFormLite() {
               country: customerData.country,
               merchant_customer_created_at: customerData.merchant_customer_created_at,
               paymentMethodType: selectedPaymentMethod?.type,
+              ...(sendStoredCredentials && {
+                storedCredentials: {
+                  reason: storedCredentialsReason,
+                  usage: storedCredentialsUsage,
+                }
+              }),
             }),
           });
 
@@ -568,6 +585,51 @@ export default function CheckoutFormLite() {
                   ? "Yuno's internal Pay button will be hidden. Use your own button to trigger payment."
                   : "Yuno's internal Pay button will be shown in the form."}
               </p>
+            </div>
+
+            {/* Stored Credentials */}
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <label className="flex items-center gap-2 mb-3 text-gray-700 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sendStoredCredentials}
+                  onChange={(e) => setSendStoredCredentials(e.target.checked)}
+                  className="w-4 h-4 accent-green-600"
+                />
+                🔐 Send Stored Credentials
+              </label>
+              <p className="text-sm text-gray-500 ml-6 mb-3">
+                {sendStoredCredentials
+                  ? "stored_credentials will be included in payment_method.detail.card"
+                  : "No stored_credentials node will be sent"}
+              </p>
+              {sendStoredCredentials && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                    <select
+                      value={storedCredentialsReason}
+                      onChange={(e) => setStoredCredentialsReason(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value="CARD_ON_FILE">CARD_ON_FILE</option>
+                      <option value="SUBSCRIPTION">SUBSCRIPTION</option>
+                      <option value="UNSCHEDULED_CARD_ON_FILE">UNSCHEDULED_CARD_ON_FILE</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Usage</label>
+                    <select
+                      value={storedCredentialsUsage}
+                      onChange={(e) => setStoredCredentialsUsage(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value="FIRST">FIRST</option>
+                      <option value="USED">USED</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )}

@@ -33,18 +33,11 @@ export default function HybridLiteForm() {
   const [yunoInstance, setYunoInstance] = useState<YunoInstance | null>(null);
   const [sessionMissing, setSessionMissing] = useState(false);
   const [formMounted, setFormMounted] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showTermsError, setShowTermsError] = useState(false);
   const [amount, setAmount] = useState<number>(0);
   const [displayCurrency, setDisplayCurrency] = useState<string>(currency);
 
-  const termsAcceptedRef = useRef(false);
   const mountedRef = useRef(false);
   const instanceRef = useRef<YunoInstance | null>(null);
-
-  useEffect(() => {
-    termsAcceptedRef.current = termsAccepted;
-  }, [termsAccepted]);
 
   // ── Initialize the checkout session for the SDK (does not mount the form yet) ──
   const initCheckout = (instance: YunoInstance, session: string) => {
@@ -77,15 +70,7 @@ export default function HybridLiteForm() {
         console.log("Token with information:", tokenWithInformation);
         console.log("One time token:", oneTimeToken);
 
-        if (!termsAcceptedRef.current) {
-          console.error("Terms and conditions not accepted");
-          setShowTermsError(true);
-          alert("You must accept the terms and conditions to complete the payment.");
-          throw new Error("Terms and conditions not accepted");
-        }
-
         try {
-          setShowTermsError(false);
           const checkoutSessionId = localStorage.getItem("yuno_checkout_session");
           const options = JSON.parse(localStorage.getItem("yuno_hybrid_options") || "{}");
           const storedCurrency = localStorage.getItem("yuno_checkout_currency") || currency;
@@ -149,21 +134,8 @@ export default function HybridLiteForm() {
     });
   };
 
-  // ── Accept terms → mount the SDK Lite form for the selected method ────────────
-  const handleMountForm = () => {
-    if (!termsAccepted) {
-      setShowTermsError(true);
-      return;
-    }
-    setShowTermsError(false);
-
-    // Use the ref (not state) so we mount on the SAME instance that ran startCheckout.
-    const instance = instanceRef.current;
-    if (!instance) {
-      console.error("Yuno instance not ready");
-      return;
-    }
-
+  // ── Mount the SDK Lite form for the selected method (no terms gate) ───────────
+  const mountForm = (instance: YunoInstance) => {
     if (isExternal) {
       instance.mountExternalButtons([
         { paymentMethodType: methodType, elementSelector: "#external-pay-button" },
@@ -212,6 +184,8 @@ export default function HybridLiteForm() {
       setYunoInstance(instance);
       console.log("Yuno SDK initialized — starting checkout for", methodType);
       initCheckout(instance, session);
+      // Mount the form directly — no terms gate.
+      mountForm(instance);
     };
 
     init();
@@ -252,79 +226,30 @@ export default function HybridLiteForm() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Payment Form Container */}
         <div className="lg:col-span-2 order-2 lg:order-1">
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 min-h-[200px]">
+            {/* Loading hint until the SDK mounts the form */}
+            {!formMounted && (
+              <div className="min-h-[160px] flex flex-col items-center justify-center text-gray-500 gap-3">
+                <svg className="w-6 h-6 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-sm">Loading {methodName} form…</span>
+              </div>
+            )}
+
             {/* External payment button (Google Pay, Apple Pay, PayPal) */}
-            {isExternal && formMounted && (
-              <div className="mb-6">
+            {isExternal && (
+              <div className={formMounted ? "mb-6" : "hidden"}>
                 <div id="external-pay-button" className="min-h-[48px]"></div>
               </div>
             )}
 
-            {/* SDK Lite form elements — always in DOM, hidden until mounted */}
+            {/* SDK Lite form elements — always in DOM so the SDK can mount into them */}
             <div className={formMounted && !isExternal ? "" : "hidden"}>
               <div id="form-element"></div>
               <div id="action-form-element" className="mt-4"></div>
             </div>
-
-            {/* Terms gate before mounting */}
-            {!formMounted && (
-              <div className="min-h-[300px] flex flex-col items-center justify-center p-8">
-                <div className="max-w-md w-full space-y-6">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                      <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Ready to pay with {methodName}</h3>
-                    <p className="text-sm text-gray-600">
-                      {isExternal
-                        ? `Accept terms to see the ${methodName} button`
-                        : "Please accept our terms and conditions to continue"}
-                    </p>
-                  </div>
-
-                  <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-lg transition-colors ${showTermsError ? "bg-red-50 border-2 border-red-300" : "bg-white border-2 border-gray-200 hover:border-blue-300"}`}>
-                    <input
-                      type="checkbox"
-                      checked={termsAccepted}
-                      onChange={(e) => {
-                        setTermsAccepted(e.target.checked);
-                        if (e.target.checked) setShowTermsError(false);
-                      }}
-                      className="w-5 h-5 mt-0.5 accent-blue-600 flex-shrink-0"
-                    />
-                    <div className="flex-1">
-                      <span className="text-sm text-gray-700">
-                        I accept the{" "}
-                        <a href="#" className="text-blue-600 hover:text-blue-800 underline font-medium">terms and conditions</a>
-                        {" "}and{" "}
-                        <a href="#" className="text-blue-600 hover:text-blue-800 underline font-medium">privacy policy</a>
-                      </span>
-                      {showTermsError && (
-                        <p className="text-xs text-red-600 mt-1 font-medium">⚠️ You must accept the terms and conditions to proceed</p>
-                      )}
-                    </div>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleMountForm}
-                    disabled={!termsAccepted || !yunoInstance}
-                    className={`w-full px-6 py-4 rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg flex items-center justify-center space-x-3 ${termsAccepted && yunoInstance ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white cursor-pointer" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <span>
-                      {termsAccepted
-                        ? (isExternal ? `Show ${methodName} Button` : "Start Payment")
-                        : "Accept Terms to Continue"}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 

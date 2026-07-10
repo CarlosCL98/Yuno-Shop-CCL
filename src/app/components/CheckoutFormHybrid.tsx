@@ -406,74 +406,72 @@ export default function CheckoutFormHybrid() {
       {/* Payment Methods Selection */}
       {showPaymentMethods && (
         <section>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">💳 Choose Your Payment Method</h2>
-            <p className="text-gray-600">
-              CARD opens the Secure Fields form · other methods open SDK Lite — both on the same session
-            </p>
+          <div className="mb-6 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowPaymentMethods(false)}
+              aria-label="Back to information"
+              className="text-gray-500 hover:text-blue-600 transition"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <h2 className="text-2xl font-bold text-gray-900">Choose how you want to pay</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Vertical list of methods (merchant-style rows) */}
+          <div className="space-y-3">
             {paymentMethods.map((method, index) => {
               const isVaulted = method.vaulted_token;
               const isCard = method.type === "CARD";
               return (
-                <div
+                <button
                   key={getPaymentMethodId(method) + index}
+                  type="button"
                   onClick={() => handlePaymentMethodSelect(method)}
                   className={`
-                    relative border-2 rounded-xl p-5 cursor-pointer transition-all duration-200
-                    hover:shadow-md hover:-translate-y-0.5 group border-gray-200 bg-white hover:border-blue-300
-                    ${isVaulted ? 'ring-2 ring-green-200 ring-opacity-50' : ''}
+                    w-full flex items-center gap-4 text-left border rounded-xl px-5 py-4 bg-white
+                    transition-all duration-200 hover:border-blue-500 hover:shadow-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500
+                    ${isVaulted ? 'border-green-300' : 'border-gray-200'}
                   `}
                 >
-                  {/* Integration badge */}
-                  <div className="absolute top-3 right-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${isCard ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                      {isCard ? '🔒 Secure Fields' : '🎯 SDK Lite'}
-                    </span>
+                  {/* Icon */}
+                  <div className="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-lg bg-gray-50">
+                    <img src={method.icon} alt={method.name} className="w-7 h-7 object-contain" />
                   </div>
 
-                  {isVaulted && (
-                    <div className="absolute top-10 right-3">
-                      <div className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span>Saved</span>
-                      </div>
+                  {/* Name + tags */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center flex-wrap gap-2">
+                      <span className="font-medium text-gray-900 truncate">{method.name}</span>
+                      {method.preferred && !isVaulted && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          ⭐ Recommended
+                        </span>
+                      )}
+                      {isVaulted && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          Saved
+                        </span>
+                      )}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isCard ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                        {isCard ? '🔒 Secure Fields' : '🎯 SDK Lite'}
+                      </span>
                     </div>
-                  )}
-
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 p-3 rounded-lg bg-gray-50 group-hover:bg-gray-100 transition-colors duration-200">
-                      <img src={method.icon} alt={method.name} className="w-8 h-8 object-contain" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="font-semibold truncate text-gray-900">{method.name}</h3>
-                        {method.preferred && !isVaulted && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            ⭐ Recommended
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm mb-2 line-clamp-2 text-gray-600">{method.description}</p>
-                    </div>
+                    {method.description && (
+                      <p className="text-sm text-gray-500 truncate mt-0.5">{method.description}</p>
+                    )}
                   </div>
-                </div>
+
+                  {/* Chevron */}
+                  <svg className="flex-shrink-0 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               );
             })}
-          </div>
-
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setShowPaymentMethods(false)}
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
-            >
-              ← Back to information
-            </button>
           </div>
         </section>
       )}

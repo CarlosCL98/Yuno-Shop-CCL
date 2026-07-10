@@ -75,6 +75,14 @@ export default function Navbar() {
                                 🔗 Direct API Checkout
                                 <span className="block text-xs text-red-600 mt-0.5">No SDK - Raw Card Data</span>
                             </Link>
+                            <Link
+                                href="/checkout-secure-fields"
+                                onClick={() => setShowCheckoutMenu(false)}
+                                className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition border-t border-gray-100"
+                            >
+                                🔒 Secure Fields
+                                <span className="block text-xs text-emerald-600 mt-0.5">Custom card form & errors</span>
+                            </Link>
                         </div>
                     )}
                 </div>

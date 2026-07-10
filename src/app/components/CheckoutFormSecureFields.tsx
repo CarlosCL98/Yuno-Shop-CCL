@@ -95,12 +95,28 @@ export default function CheckoutFormSecureFields() {
 
   const router = useRouter();
 
+  // Base CSS injected into every secure-field iframe. Yuno's default styles render
+  // the placeholder transparent (floating-label animation), so we force it visible
+  // and set a readable input color/size to match our own inputs.
+  const BASE_FIELD_STYLES = `
+    input {
+      color: #111827 !important;
+      font-size: 16px !important;
+    }
+    input::placeholder {
+      color: #9ca3af !important;
+      opacity: 1 !important;
+    }
+  `;
+
   // CSS injected into the CVV iframe to mask/unmask the value.
   // The eye toggle turns the CVV into ••• (masked) when hidden.
   const cvvMaskStyles = (hidden: boolean) =>
-    hidden
-      ? `input { -webkit-text-security: disc !important; text-security: disc !important; }`
-      : `input { -webkit-text-security: none !important; text-security: none !important; }`;
+    `${BASE_FIELD_STYLES}
+     input {
+       -webkit-text-security: ${hidden ? "disc" : "none"} !important;
+       text-security: ${hidden ? "disc" : "none"} !important;
+     }`;
 
   const toggleCvvHidden = () => {
     const next = !cvvHidden;
@@ -237,7 +253,10 @@ export default function CheckoutFormSecureFields() {
       name: "pan",
       options: {
         placeholder: "0000 0000 0000 0000",
-        label: "Card Number",
+        // In this SDK the `label` is what renders inside the field (floating label
+        // acting as the placeholder); the `placeholder` option alone paints nothing.
+        label: "0000 0000 0000 0000",
+        styles: BASE_FIELD_STYLES,
         showError: false, // ← suppress Yuno's default message; we render our own
         validationType: "on_blur_full",
         onChange: ({ error }: { error: boolean }) => setFieldError("pan", error),
@@ -250,7 +269,8 @@ export default function CheckoutFormSecureFields() {
       name: "expiration",
       options: {
         placeholder: "MM / YY",
-        label: "Expiration",
+        label: "MM / YY",
+        styles: BASE_FIELD_STYLES,
         showError: false,
         onChange: ({ error }: { error: boolean }) => setFieldError("expiration", error),
         onBlur: () => setFieldTouched("expiration"),

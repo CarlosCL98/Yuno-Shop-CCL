@@ -20,8 +20,19 @@ import { PaymentMethod } from "../models/definitions";
  *
  * The session id, converted amount, currency, country and demo options are persisted to
  * localStorage so the two payment pages are fully self-contained.
+ *
+ * The `basePath` + `cardIntegrationLabel` props let the same selector drive different card
+ * integrations (Secure Fields at /checkout-hybrid, Headless at /checkout-hybrid-headless).
  */
-export default function CheckoutFormHybrid() {
+interface CheckoutFormHybridProps {
+  basePath?: string;
+  cardIntegrationLabel?: string;
+}
+
+export default function CheckoutFormHybrid({
+  basePath = "/checkout-hybrid",
+  cardIntegrationLabel = "🔒 Secure Fields",
+}: CheckoutFormHybridProps = {}) {
   const { cartItems, total } = useCart();
   const { currency, formatPrice, convertPrice, setCountry, country: currencyCountry } = useCurrency();
   const { customerData, updateCustomerField, updateNestedField, updateCountryData, clearCachedCustomerId } = useCustomer();
@@ -179,14 +190,14 @@ export default function CheckoutFormHybrid() {
   // ── Route to the correct integration based on selected method ─────────────────
   const handlePaymentMethodSelect = (method: PaymentMethod) => {
     if (method.type === "CARD") {
-      router.push("/checkout-hybrid/card");
+      router.push(`${basePath}/card`);
     } else {
       const params = new URLSearchParams({
         type: method.type,
         vaulted: method.vaulted_token || "",
         name: method.name || method.type,
       });
-      router.push(`/checkout-hybrid/apm?${params.toString()}`);
+      router.push(`${basePath}/apm?${params.toString()}`);
     }
   };
 
@@ -457,7 +468,7 @@ export default function CheckoutFormHybrid() {
                         </span>
                       )}
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isCard ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                        {isCard ? '🔒 Secure Fields' : '🎯 SDK Lite'}
+                        {isCard ? cardIntegrationLabel : '🎯 SDK Lite'}
                       </span>
                     </div>
                     {method.description && (

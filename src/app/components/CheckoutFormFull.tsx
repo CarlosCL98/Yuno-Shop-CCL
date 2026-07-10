@@ -139,7 +139,7 @@ export default function CheckoutFormFull() {
        * The complete list of country codes is available on https://docs.y.uno/docs/country-coverage-yuno-sdk
       */
       countryCode: customerData.country || '',
-      language: 'en',
+      language: 'pt-BR',
       showLoading: true,
       issuersFormEnable: true,
       showPaymentStatus: true,
@@ -149,7 +149,7 @@ export default function CheckoutFormFull() {
        * isCreditCardProcessingOnly: true | false | undefined
       */
       card: {
-        isCreditCardProcessingOnly: false,
+        isCreditCardProcessingOnly: true,
         type: "extends",
         styles: '',
         cardSaveEnable: true,

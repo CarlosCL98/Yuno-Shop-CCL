@@ -241,16 +241,16 @@ export default function CheckoutFormLite() {
       checkoutSession: localStorage.getItem("yuno_checkout_session") ?? "",
       countryCode: customerData.country || '',
       elementSelector: "#form-element",
-      language: 'en',
+      language: 'es',
       showLoading: true,
       issuersFormEnable: true,
-      showPaymentStatus: true,
+      showPaymentStatus: false,
       showPayButton: !useExternalPayButton,
       card: {
         isCreditCardProcessingOnly: false,
         type: "extends",
         styles: '',
-        cardSaveEnable: false,
+        cardSaveEnable: true,
         texts: {}
       },
       onLoading: (args: any) => {
@@ -262,7 +262,7 @@ export default function CheckoutFormLite() {
       yunoPaymentResult: (status: any) => {
         console.log('Payment result:', status);
         if (status === "SUCCEEDED") {
-          router.push("/payment-result?status=success");
+          //router.push("/payment-result?status=success");
         }
       },
       yunoError: (message: any, data: any) => {
@@ -348,7 +348,7 @@ export default function CheckoutFormLite() {
       checkoutSession: localStorage.getItem("yuno_checkout_session") ?? "",
       countryCode: customerData.country || '',
       elementSelector: "#form-element",
-      language: 'en',
+      language: 'es',
       showLoading: true,
       issuersFormEnable: true,
       showPaymentStatus: false,
@@ -377,7 +377,7 @@ export default function CheckoutFormLite() {
       yunoPaymentResult: (status: any) => {
         console.log('Payment result:', status);
         if (status === "SUCCEEDED") {
-          router.push("/payment-result?status=success");
+          //router.push("/payment-result?status=success");
         }
       },
       /**

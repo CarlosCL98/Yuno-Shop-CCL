@@ -91,6 +91,14 @@ export default function Navbar() {
                                 🔀 Hybrid Checkout
                                 <span className="block text-xs text-indigo-600 mt-0.5">Secure Fields + Lite, one session</span>
                             </Link>
+                            <Link
+                                href="/checkout-hybrid-headless"
+                                onClick={() => setShowCheckoutMenu(false)}
+                                className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition border-t border-gray-100"
+                            >
+                                ⚡ Hybrid Headless
+                                <span className="block text-xs text-purple-600 mt-0.5">Headless card + Lite APMs, one session</span>
+                            </Link>
                         </div>
                     )}
                 </div>

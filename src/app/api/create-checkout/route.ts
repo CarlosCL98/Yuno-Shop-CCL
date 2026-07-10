@@ -29,12 +29,6 @@ export async function POST(request: Request) {
         "currency": params.currency || "USD",
         "value": roundedAmount
       },
-      "metadata": [
-        {
-          "key": "fraudValidation",
-          "value": "yes"
-        }
-      ],
       "installments": {
         "plan": [
           {
@@ -42,14 +36,10 @@ export async function POST(request: Request) {
             "rate": 0
           },
           {
-            "installment": 3,
-            "rate": 1.2
-          },
-          {
-            "installment": 6,
-            "rate": 1.5
-          }
-        ],
+            "installment": 2,
+            "rate": 0
+          }, { "installment": 3, "rate": 0}, { "installment": 4, "rate": 0}, { "installment": 5, "rate": 0},
+          { "installment": 6, "rate": 1.0125 }, { "installment": 7, "rate": 1.0252 }, { "installment": 8, "rate": 1.0381 }], "plan_id": null
       }
     }
 

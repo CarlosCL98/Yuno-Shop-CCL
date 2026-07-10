@@ -8,6 +8,8 @@ interface YunoInstance {
   submitOneTimeTokenForm(): Promise<void>;
   continuePayment(config: any): Promise<any>;
   hideLoader(): void;
+  // Headless Web SDK — returns an apiClientPayment client for merchant-owned card forms.
+  apiClientPayment(config: any): Promise<any>;
 }
 
 interface YunoStatic {

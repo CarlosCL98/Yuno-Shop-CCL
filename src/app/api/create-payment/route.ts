@@ -39,12 +39,37 @@ export async function POST(request: Request) {
         //customer_payer.browser_info = params.browserInfo;
         //}
 
+        // Payment method type is driven by the client so the same route serves both
+        // Secure Fields (CARD) and SDK Lite (APMs). Card-only details (installments,
+        // capture, stored_credentials) are attached only when the type is CARD.
+        const paymentMethodType = params.paymentMethodType || "CARD";
+
+        const payment_method: any = {
+            "type": paymentMethodType,
+            "token": params.oneTimeToken,
+        };
+
+        if (paymentMethodType === "CARD") {
+            payment_method.detail = {
+                "card": {
+                    "installments": 1,
+                    "verify": false,
+                    "capture": true,
+                    ...(params.storedCredentials && {
+                        "stored_credentials": {
+                            "reason": params.storedCredentials.reason,
+                            "usage": params.storedCredentials.usage,
+                        }
+                    }),
+                }
+            };
+        }
+
         const body = {
+            "description": "Test Yuno",
+            "payment_description": "Test Yuno",
             "account_id": process.env.ACCOUNT_CODE!,
             "merchant_order_id": merchant_order_id,
-            "merchant_reference": merchant_order_id,
-            "description": "LIM-SCL-LIM",
-            "callback_url": "https://yuno-shop-ccl.vercel.app/profile",
             "country": params.country || "CO",
             "amount": {
                 "currency": params.currency || "USD",
@@ -54,187 +79,8 @@ export async function POST(request: Request) {
                 "session": params.checkoutSessionId
             },
             "customer_payer": customer_payer,
-            "payment_method": {
-                "token": params.oneTimeToken,
-                "vault_on_success": true,
-                "detail": {
-                    "card": {
-                        "verify": false,
-                        "capture": false,
-                        ...(params.storedCredentials && {
-                            "stored_credentials": {
-                                "reason": params.storedCredentials.reason,
-                                "usage": params.storedCredentials.usage,
-                            }
-                        }),
-                    }
-                }
-            },
-            "additional_data": {
-                "airline": {
-                    "legs": [
-                        {
-                            "arrival_airport": "SCL",
-                            "arrival_airport_country": "CL",
-                            "arrival_airport_city": "SCL",
-                            "arrival_datetime": "2026-07-03T08:11:00",
-                            "arrival_airport_timezone": "GMT-04",
-                            "base_fare": null,
-                            "base_fare_currency": null,
-                            "carrier_code": "JA",
-                            "departure_airport": "LIM",
-                            "departure_airport_country": "PE",
-                            "departure_airport_city": "LIM",
-                            "departure_airport_timezone": "GMT-05",
-                            "departure_datetime": "2026-07-03T04:30:00",
-                            "fare_basis_code": null,
-                            "fare_class_code": null,
-                            "flight_number": "7731",
-                            "stopover_code": "O",
-                            "route_order": 0,
-                            "order": 0
-                        },
-                        {
-                            "arrival_airport": "LIM",
-                            "arrival_airport_country": "PE",
-                            "arrival_airport_city": "LIM",
-                            "arrival_datetime": "2026-07-07T12:40:00",
-                            "arrival_airport_timezone": "GMT-05",
-                            "base_fare": null,
-                            "base_fare_currency": null,
-                            "carrier_code": "JA",
-                            "departure_airport": "SCL",
-                            "departure_airport_country": "CL",
-                            "departure_airport_city": "SCL",
-                            "departure_airport_timezone": "GMT-04",
-                            "departure_datetime": "2026-07-07T08:41:00",
-                            "fare_basis_code": null,
-                            "fare_class_code": null,
-                            "flight_number": "7730",
-                            "stopover_code": "O",
-                            "route_order": 1,
-                            "order": 0
-                        }
-                    ],
-                    "passengers": [
-                        {
-                            "country": null,
-                            "date_of_birth": "1989-02-13",
-                            "document": {
-                                "document_number": "122345151",
-                                "document_type": "P",
-                                "country": "CL"
-                            },
-                            "first_name": "Carlos",
-                            "last_name": "Medina",
-                            "loyalty_number": null,
-                            "loyalty_tier": null,
-                            "middle_name": "",
-                            "nationality": "",
-                            "type": "A",
-                            "email": null,
-                            "phone": null
-                        }
-                    ],
-                    "pnr": "M5RCSF",
-                    "tickets": [
-                        {
-                            "ticket_number": "M5RCSF",
-                            "restricted": false,
-                            "e_ticket": false,
-                            "issue": {
-                                "date": "2026-03-27T02:33:19",
-                                "booking_system_code": "M5RCSF",
-                                "booking_system_name": "Navitaire"
-                            }
-                        }
-                    ]
-                },
-                "order": {
-                    "fee_amount": 0,
-                    "items": [
-                        {
-                            "brand": null,
-                            "category": "Ancillaries",
-                            "id": "LBGD",
-                            "manufacture_part_number": null,
-                            "name": "Carry-on baggage",
-                            "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 5
-                        },
-                        {
-                            "brand": null,
-                            "category": "Ancillaries",
-                            "id": "STF",
-                            "manufacture_part_number": null,
-                            "name": "Seat Fees",
-                            "quantity": 1,
-                            "sku_code": "Service",
-                            "unit_amount": 5
-                        }
-                    ],
-                    "shipping_amount": 0,
-                    "sales_channel": "WebPostBooking"
-                }
-            },
-            "metadata": [
-                {
-                    "key": "fraudValidation",
-                    "value": "yes"
-                }
-            ]
+            "payment_method": payment_method,
         }
-
-        /*const body = {
-            "description": "Pago de boletos",
-            "payment_description": "Pago de boletos",
-            "account_id": process.env.ACCOUNT_CODE!,
-            "merchant_order_id": merchant_order_id,
-            "country": "PE",
-            "additional_data": {
-                "airline": {
-                    "legs": [
-                        {
-                            "departure_airport": "LIM",
-                            "arrival_airport": "IQT",
-                            "carrier_code": "2I",
-                            "departure_airport_timezone": "-05:00",
-                            "departure_datetime": "2026-03-28T11:45:00",
-                            "fare_class_code": "L",
-                            "flight_number": "3131"
-                        }
-                    ],
-                    "passengers": [
-                        {
-                            "country": "PE",
-                            "nationality": "PE",
-                            "date_of_birth": "2002-03-29",
-                            "document": {
-                                "document_type": "DNI",
-                                "document_number": "12345678"
-                            },
-                            "first_name": "ROSMERY",
-                            "last_name": "CACHICATARI",
-                            "type": "A"
-                        }
-                    ],
-                    "pnr": "DHPVEQ"
-                }
-            },
-            "amount": {
-                "currency": "USD",
-                "value": "169.54"
-            },
-            "checkout": {
-                "session": params.checkoutSessionId
-            },
-            "customer_payer": customer_payer,
-            "payment_method": {
-                "type": "CARD",
-                "token": params.oneTimeToken,
-            }
-        }*/
         console.log(body);
         const response = await fetch(`${apiBaseUrl}/v1/payments`, {
             method: "POST",

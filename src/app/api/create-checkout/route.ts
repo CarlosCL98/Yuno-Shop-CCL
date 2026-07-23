@@ -28,18 +28,6 @@ export async function POST(request: Request) {
       "amount": {
         "currency": params.currency || "USD",
         "value": roundedAmount
-      },
-      "installments": {
-        "plan": [
-          {
-            "installment": 1,
-            "rate": 0
-          },
-          {
-            "installment": 2,
-            "rate": 0
-          }, { "installment": 3, "rate": 0}, { "installment": 4, "rate": 0}, { "installment": 5, "rate": 0},
-          { "installment": 6, "rate": 1.0125 }, { "installment": 7, "rate": 1.0252 }, { "installment": 8, "rate": 1.0381 }], "plan_id": null
       }
     }
 

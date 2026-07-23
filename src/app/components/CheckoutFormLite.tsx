@@ -244,7 +244,7 @@ export default function CheckoutFormLite() {
       language: 'es',
       showLoading: true,
       issuersFormEnable: true,
-      showPaymentStatus: false,
+      showPaymentStatus: true,
       showPayButton: !useExternalPayButton,
       card: {
         isCreditCardProcessingOnly: false,

@@ -57,6 +57,7 @@ export async function POST(request: Request) {
             "payment_method": {
                 "token": params.oneTimeToken,
                 "vault_on_success": true,
+                "type": "APPLE_PAY",
                 "detail": {
                     "card": {
                         "verify": false,

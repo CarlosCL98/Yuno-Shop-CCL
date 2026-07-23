@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       "payment_description": "Test Yuno Shop CCL",
       //"callback_url": "https://localhost:3000/profile",
       "country": params.country,
-      //"customer_id": params.customer_id,
+      "customer_id": params.customer_id,
       "amount": {
         "currency": params.currency || "USD",
         "value": roundedAmount

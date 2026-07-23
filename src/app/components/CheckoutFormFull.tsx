@@ -139,7 +139,7 @@ export default function CheckoutFormFull() {
        * The complete list of country codes is available on https://docs.y.uno/docs/country-coverage-yuno-sdk
       */
       countryCode: customerData.country || '',
-      language: 'pt-BR',
+      language: 'es-ES',
       showLoading: true,
       issuersFormEnable: true,
       showPaymentStatus: true,
@@ -153,7 +153,10 @@ export default function CheckoutFormFull() {
         type: "extends",
         styles: '',
         cardSaveEnable: true,
-        texts: {}
+        texts: {},
+        onInstallmentSelected: ({ installment, label, amount, isMerchantInstallment }: { installment: any, label: any, amount: any, isMerchantInstallment: any }) => {
+          console.log("Installment selected:", installment, label, amount, isMerchantInstallment);
+        }
       },
       onLoading: (args: any) => {
         console.log(args);
